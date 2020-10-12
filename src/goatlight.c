@@ -58,7 +58,7 @@ void setHiddenRightBarColors(UWORD, UWORD, UWORD);
 void mt_music();
 void mt_end();*/
 
-FN_HOTSPOT 
+//FN_HOTSPOT 
 /*void INTERRUPT interruptHandlerMusic(REGARG(volatile tCustom *pCustom, "a0"), REGARG(volatile void *pData, "a1"))
 {
     //mt_init(interruptHandlerMusic);
@@ -1424,8 +1424,8 @@ UBYTE buildPerspectiveCopperlist(UBYTE ubCopIndex)
 
             tPerspectiveBarArray[ubCount].ubCopIndex2 = ubCopIndex;
 
-            copSetMoveBackAndFront(&g_pCustom->color[0], 0x0888);
-            copSetMoveBackAndFront(&g_pCustom->color[0], 0x0888);
+            copSetMoveBackAndFront(&g_pCustom->color[0], 0x0000);
+            copSetMoveBackAndFront(&g_pCustom->color[0], 0x0000);
         }
         else
         {

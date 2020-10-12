@@ -6,7 +6,6 @@
 #include <ace/managers/blit.h>
 
 #include "../include/colors.h"
-//#include "../_res/electrobusted.h"
 
 #define BITPLANES 5
 
@@ -27,11 +26,6 @@
   copSetMove(&pCmdListFront[ubCopIndex].sMove, var, var2); \
   ubCopIndex++;
 
-// All variables outside fns are global - can be accessed in any fn
-// Static means here that given var is only for this file, hence 's_' prefix
-// You can have many variables with same name in different files and they'll be
-// independent as long as they're static
-// * means pointer, hence 'p' prefix
 static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
@@ -40,11 +34,6 @@ static tCopCmd *pCopCmds;
 static UWORD g_sWaitPositions[YRES];
 
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue);
-
-//Music
-/*long mt_init(const unsigned char *);
-void mt_music();
-void mt_end();*/
 
 void metaballsGsCreate(void)
 {
@@ -114,10 +103,8 @@ void metaballsGsCreate(void)
   s_pVpMain->pPalette[20] = 0x0055;
   s_pVpMain->pPalette[21] = 0x0066;
 
-  //mt_init(electrobusted_data);
+  systemSetDma(DMAB_SPRITE, 0);
 
-  // We don't need anything from OS anymore
-  //systemUnuse();
 
   /*
 ColUMN            0   1   2   3        4   5   6   7        8   9   10   11   12   13
@@ -247,16 +234,14 @@ void metaballsGsLoop(void)
 #endif
 
   vPortWaitForEnd(s_pVpMain);
-  //mt_music();
   copSwapBuffers();
 }
 
 void metaballsGsDestroy(void)
 {
-  //mt_end();
 
   // Cleanup when leaving this gamestate
-  //systemUse();
+  systemUse();
 
   // This will also destroy all associated viewports and viewport managers
   viewDestroy(s_pView);
@@ -265,20 +250,11 @@ void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue)
 {
   tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
   tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
-  //tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
   ubX++;
 
 #ifdef ACE_DEBUG
   logWrite("Setting value %x for pixel vertical %u\n", uwValue, ubY);
 #endif
-  /*copSetMove(&pCmdListBack[g_sWaitPositions[ubY] + ubX].sMove, &g_pCustom->color[ubX], uwValue);
-  copSetMove(&pCmdListFront[g_sWaitPositions[ubY] + ubX].sMove, &g_pCustom->color[ubX], uwValue);*/
 
   pCmdListBack[g_sWaitPositions[ubY] + ubX].sMove.bfValue = uwValue;
 }
-/*
-void copSetMove(tCopMoveCmd *pMoveCmd, volatile void *pAddr, UWORD uwValue) {
-	pMoveCmd->bfUnused = 0;
-	pMoveCmd->bfDestAddr = (ULONG)pAddr - (ULONG)((UBYTE *)g_pCustom);
-	pMoveCmd->bfValue = uwValue;
-}*/
