@@ -352,6 +352,8 @@ tMover g_pBallsMovers[MAXBALLS];
 v2d g_Gravity;
 #define LITTLE_BALLS_MASS 2
 
+ tView * g_tViewLateDestroy;
+
 
 void gameGsCreate(void)
 {

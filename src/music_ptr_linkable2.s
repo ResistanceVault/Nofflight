@@ -88,7 +88,7 @@ _mt_end:
 	RTS
 
 _mt_music:
-	MOVEM.L	D0-D7/A0-A6,-(SP)
+	MOVEM.L	D0-D7/A0-A7,-(SP)
 	ADDQ.B	#1,mt_Counter
 	MOVE.B	mt_Counter(PC),D0
 	CMP.B	mt_speed(PC),D0
@@ -343,7 +343,7 @@ mt_NextPosition:
 mt_NoNewPosYet:
 	TST.B	mt_PosJumpFlag
 	BNE.S	mt_NextPosition
-	MOVEM.L	(SP)+,D0-D7/A0-A6
+	MOVEM.L	(SP)+,D0-D7/A0-A7
 	RTS
 
 mt_CheckEfx:

@@ -1,11 +1,17 @@
 #include "../include/metaballschunky.h"
+#include "../include/main.h"
+
 #include <ace/managers/key.h>                   // Keyboard processing
 #include <ace/managers/game.h>                  // For using gameExit
 #include <ace/managers/system.h>                // For systemUnuse and systemUse
 #include <ace/managers/viewport/simplebuffer.h> // Simple buffer
 #include <ace/managers/blit.h>
 
-#include "../include/colors.h"
+#include <stdio.h>
+#include <proto/dos.h>
+#include <unistd.h>
+
+//#include "../include/colors.h"
 
 #define BITPLANES 5
 
@@ -32,6 +38,8 @@ static tSimpleBufferManager *s_pMainBuffer;
 static UWORD s_uwCopRawOffs = 0;
 static tCopCmd *pCopCmds;
 static UWORD g_sWaitPositions[YRES];
+static UBYTE *pBuffer;
+ tView * g_tViewLateDestroy;
 
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue);
 
@@ -105,7 +113,6 @@ void metaballsGsCreate(void)
 
   systemSetDma(DMAB_SPRITE, 0);
 
-
   /*
 ColUMN            0   1   2   3        4   5   6   7        8   9   10   11   12   13
 
@@ -170,8 +177,25 @@ Bitplane 4 -      0   0   0   0        0   0   0   0        0   0    0    0    0
     }
   }
 
+  pBuffer = AllocMem(192000, MEMF_CHIP);
+
+  systemUseNoInts2();
+  Execute((CONST_STRPTR)"copy data/colors.bin to ram:colors.bin", 0, 0);
+  systemUnuseNoInts2();
+
+  BPTR file = 0;
+  systemUseNoInts();
+  file = Open((CONST_STRPTR)"ram:colors.bin", MODE_OLDFILE);
+  if (!file)
+    gameExit();
+  Read(file, pBuffer, 192000);
+  Close(file);
+  unlink("ram:colors.bin");
+  systemUnuseNoInts();
+
   // Load the view
   viewLoad(s_pView);
+  viewDestroy((tView *)g_tViewLateDestroy);
 }
 
 void metaballsGsLoop(void)
@@ -181,8 +205,9 @@ void metaballsGsLoop(void)
 #endif
 
   static UWORD uwFrameNo = 0;
-  static UBYTE *pColorPtr = &colors_data[0];
-  
+  //static UBYTE *pColorPtr = &colors_data[0];
+  static UBYTE *pColorPtr = NULL;
+  if (pColorPtr==NULL) pColorPtr = pBuffer;
 
   // This will loop forever until you "pop" or change gamestate
   // or close the game
@@ -226,7 +251,8 @@ void metaballsGsLoop(void)
   if (uwFrameNo >= 300)
   {
     uwFrameNo = 0;
-    pColorPtr = &colors_data[0];
+    //pColorPtr = &colors_data[0];
+    pColorPtr = pBuffer;
   }
 
 #ifdef COLORDEBUG
@@ -239,6 +265,8 @@ void metaballsGsLoop(void)
 
 void metaballsGsDestroy(void)
 {
+
+  FreeMem(pBuffer, 192000);
 
   // Cleanup when leaving this gamestate
   systemUse();

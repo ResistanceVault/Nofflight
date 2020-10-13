@@ -1,6 +1,6 @@
 bin_PROGRAMS = flash2021
 flash2021_LDADD = music_ptr_linkable2.o
-flash2021_SOURCES = main.c simplebuffertest.c sprites.c physics.c vectors.c goatlight.c resistancelogo.c metaballschunky.c
+flash2021_SOURCES = main.c simplebuffertest.c sprites.c physics.c vectors.c goatlight.c resistancelogo.c metaballschunky.c slidingtext.c
 
 install: flash2021
 	cp flash2021 ../adf/

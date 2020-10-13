@@ -17,13 +17,6 @@
     copSetMove(&pCmdListFront[ubCopIndex].sMove, var, var2); \
     ubCopIndex++;
 
-// Assets
-   // #define MUSIC_ON
-
-#ifdef MUSIC_ON
-#include "../include/Dirty_Tricks.h"
-#endif
-
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
 
@@ -32,40 +25,18 @@ static tView *s_pView; // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
 
-#if 0
-void copyToMainBpl(const unsigned char *, const UBYTE, const UBYTE);
-#endif
-
-// Music start
-/*long mt_init(const unsigned char *);
-void mt_music();
-void mt_end();*/
-
-/*static void interruptHandlerMusic(REGARG(volatile tCustom *pCustom, "a0"), REGARG(volatile void *pData, "a1"))
-{
-    mt_music();
-    //chan3played();
-}*/
-/*static void interruptHandlerMusic()
-{
-    mt_music();
-}*/
-// Music end
-
-static UBYTE* pBuffer ;
+static UBYTE *pBuffer;
 
 void resistanceLogoGsCreate(void)
 {
-    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(5) + 3 );
+    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(5) + 3);
 
-    // Create a view - first arg is always zero, then it's option-value
     s_pView = viewCreate(0,
                          TAG_VIEW_GLOBAL_CLUT, 1, // Same Color LookUp Table for all viewports
-                        TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
+                         TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
                          TAG_VIEW_COPLIST_RAW_COUNT, ulRawSize,
-                         TAG_END);                // Must always end with TAG_END or synonym: TAG_DONE
+                         TAG_END); // Must always end with TAG_END or synonym: TAG_DONE
 
-    // Now let's do the same for main playfield
     s_pVpMain = vPortCreate(0,
                             TAG_VPORT_VIEW, s_pView,
                             TAG_VPORT_BPP, 5, // 5 bits per pixel, 32 colors
@@ -74,7 +45,7 @@ void resistanceLogoGsCreate(void)
     s_pMainBuffer = simpleBufferCreate(0,
                                        TAG_SIMPLEBUFFER_VPORT, s_pVpMain, // Required: parent viewport
                                        TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
-                                                                                  TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
+                                       TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
 
                                        TAG_END);
 
@@ -116,16 +87,11 @@ void resistanceLogoGsCreate(void)
     s_pVpMain->pPalette[30] = 0x0211;
     s_pVpMain->pPalette[31] = 0x0100;
 
-tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
- tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
-    tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
+    //tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
+    //tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
+    //tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
 
-UBYTE ubCopIndex = 0;
-        //copSetMoveBackAndFront(&g_pCustom->intreq, 0x8010);
-
-
-    //copyToMainBpl(vampireitalialogo_data_fast, 0, 3);
-    pBuffer = AllocMem(51200,MEMF_CHIP);
+    pBuffer = AllocMem(51200, MEMF_CHIP);
 
     // We don't need anything from OS anymore
     systemUnuse();
@@ -133,15 +99,13 @@ UBYTE ubCopIndex = 0;
     // Load the view
     viewLoad(s_pView);
 
-    // Start music
-    #ifdef MUSIC_ON
+// Start music
+#ifdef MUSIC_ON
 
     mt_init(Dirty_Tricks_data);
     systemSetInt(INTB_VERTB, interruptHandlerMusic, 0);
-    
-#endif
 
-   
+#endif
 
 #if 0
     systemUseNoInts2();
@@ -340,50 +304,9 @@ void resistanceLogoGsDestroy(void)
 {
     FreeMem(pBuffer, 51200);
 
-    /*CopyMemQuick(
-			s_pTestCopperView->pCopList->pBackBfr->pList,
-			s_pTestCopperView->pCopList->pFrontBfr->pList,
-			s_pTestCopperView->pCopList->pBackBfr->uwAllocSize
-		);
-
-    g_pCustom->cop1lc = (ULONG)((void *)pCopList->pBackBfr->pList);*/
-
-    // Cleanup when leaving this gamestate
-    //systemUse();
 
     // This will also destroy all associated viewports and viewport managers
     viewDestroy(s_pView);
 
-    //systemUnuse();
-
-   /* FILE *fd = fopen("pc:lol", "w");
-    fwrite(buf, 51200, 1, fd);
-    fclose(fd);*/
 }
 
-#if 0
-// Function to copy data to a main bitplane
-// Pass ubMaxBitplanes = 0 to use all available bitplanes in the bitmap
-void copyToMainBpl(const unsigned char *pData, const UBYTE ubSlot, const UBYTE ubMaxBitplanes)
-{
-    UBYTE ubBitplaneCounter;
-    for (ubBitplaneCounter = 0; ubBitplaneCounter < s_pMainBuffer->pBack->Depth; ubBitplaneCounter++)
-    {
-        blitWait();
-        g_pCustom->bltcon0 = 0x09F0;
-        g_pCustom->bltcon1 = 0x0000;
-        g_pCustom->bltafwm = 0xFFFF;
-        g_pCustom->bltalwm = 0xFFFF;
-        g_pCustom->bltamod = 0x0000;
-        g_pCustom->bltbmod = 0x0000;
-        g_pCustom->bltcmod = 0x0000;
-        g_pCustom->bltdmod = 0x0000;
-        g_pCustom->bltapt = (UBYTE *)((ULONG)&pData[40 * 256 * ubBitplaneCounter]);
-        g_pCustom->bltdpt = (UBYTE *)((ULONG)s_pMainBuffer->pBack->Planes[ubBitplaneCounter] + (40 * ubSlot));
-        g_pCustom->bltsize = 0x4014;
-        if (ubMaxBitplanes > 0 && ubBitplaneCounter + 1 >= ubMaxBitplanes)
-            return;
-    }
-    return;
-}
-#endif
