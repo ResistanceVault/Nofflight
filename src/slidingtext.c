@@ -9,15 +9,10 @@
 
 #include "fonts.h"
 
-// All variables outside fns are global - can be accessed in any fn
-// Static means here that given var is only for this file, hence 's_' prefix
-// You can have many variables with same name in different files and they'll be
-// independent as long as they're static
-// * means pointer, hence 'p' prefix
 static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
-static char g_cPhrase[] = {"VISITATE IL FORUM VAMPIRE \n"};
+static char g_cPhrase[] = {"THANKS TO OFFENCE AND ATLANTIS FOR THEIR GOATLIGHT DEMO, AWESOME!!!!        \n"};
 void printCharToRight(char);
 void scorri();
 
@@ -70,7 +65,10 @@ void slidingTxtGsLoop(void)
       printCharToRight(*s_pPhrasePointer);
       s_pPhrasePointer++;
       if (*s_pPhrasePointer == '\n')
+      {
         s_pPhrasePointer = &g_cPhrase[0];
+        stateChange(g_pGameStateManager, g_pGameStates[3]);
+      }
     }
     scorri();
 

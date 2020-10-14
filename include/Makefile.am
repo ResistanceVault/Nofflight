@@ -6,7 +6,7 @@ MODDIR=../_res/MOD/
 
 all Dirty_Tricks.h: ${MODDIR}Dirty_Tricks.mod
 #incbin.sh ${MODDIR}Dirty_Tricks.mod Dirty_Tricks.h Dirty_Tricks
-	incbin.sh ${MODDIR}dontstop.mod Dirty_Tricks.h Dirty_Tricks
+	incbin.sh ${MODDIR}chippy.mod Dirty_Tricks.h Dirty_Tricks
 
 #clean: 
 #	rm *.h

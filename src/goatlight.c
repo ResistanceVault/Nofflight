@@ -11,10 +11,8 @@
 #include "sprites.h"
 #include "../_res/ball2bpl16x16_frame1.h"
 
-
 #include "globals.h"
 //#include "../include/Dirty_Tricks.h"
-
 
 #define BITPLANES 4 // 4 bitplanes
 
@@ -48,7 +46,7 @@ void MaskScreen(UBYTE);
 void unMaskScreen(UBYTE);
 UBYTE unMaskIntro(UBYTE, UBYTE);
 void printPerspectiveRow2(tSimpleBufferTestManager *s_pMainBuffer, const UWORD, const UWORD, const UWORD);
-void printPerspectiveRow3( const UWORD, const UWORD, const UWORD);
+void printPerspectiveRow3(const UWORD, const UWORD, const UWORD);
 
 UBYTE buildPerspectiveCopperlist(UBYTE);
 
@@ -58,7 +56,7 @@ void setHiddenRightBarColors(UWORD, UWORD, UWORD);
 void mt_music();
 void mt_end();*/
 
-//FN_HOTSPOT 
+//FN_HOTSPOT
 /*void INTERRUPT interruptHandlerMusic(REGARG(volatile tCustom *pCustom, "a0"), REGARG(volatile void *pData, "a1"))
 {
     //mt_init(interruptHandlerMusic);
@@ -352,13 +350,12 @@ tMover g_pBallsMovers[MAXBALLS];
 v2d g_Gravity;
 #define LITTLE_BALLS_MASS 2
 
- tView * g_tViewLateDestroy;
-
+tView *g_tViewLateDestroy;
 
 void gameGsCreate(void)
 {
     // ULONG ulRawSize = SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES)+16;
-    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES) + MAXBALLS*2 + ACE_SPRITES_COPPERLIST_SIZE + 10 + MAXCOLORS * 4 + PERSPECTIVEBLOCKSIZE * (PERSPECTIVEBARSNUMBER + PERSPECTIVEBARSNUMBERBACK) + 1
+    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES) + MAXBALLS * 2 + ACE_SPRITES_COPPERLIST_SIZE + 10 + MAXCOLORS * 4 + PERSPECTIVEBLOCKSIZE * (PERSPECTIVEBARSNUMBER + PERSPECTIVEBARSNUMBERBACK) + 1
                        /*                   3 * 3 + // 32 bars - each consists of WAIT + 3 MOVE instruction
         1 +     // Final WAIT
         1       // Just to be sure*/
@@ -392,7 +389,7 @@ void gameGsCreate(void)
 
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
-     // We don't need anything from OS anymore
+    // We don't need anything from OS anymore
     //systemUnuse();
 
     // Start music
@@ -400,11 +397,10 @@ void gameGsCreate(void)
     /*systemSetInt(INTB_VERTB, 0, 0);
     systemSetInt(INTB_COPER, interruptHandlerMusic, 0);*/
     systemUnuse();
-   
 
     for (UBYTE ubBallIndex = 0; ubBallIndex < MAXBALLS; ubBallIndex++)
     {
-        spriteVectorInit(&g_pBallsMovers[ubBallIndex], ubBallIndex, -16-ubBallIndex*9, 50+ubBallIndex*20, fix16_div(fix16_from_int((int)ubBallIndex+4), fix16_from_int((int)ubBallIndex+2)), 0, LITTLE_BALLS_MASS);
+        spriteVectorInit(&g_pBallsMovers[ubBallIndex], ubBallIndex, -16 - ubBallIndex * 9, 50 + ubBallIndex * 20, fix16_div(fix16_from_int((int)ubBallIndex + 4), fix16_from_int((int)ubBallIndex + 2)), 0, LITTLE_BALLS_MASS);
         copBlockEnableSpriteRaw(s_pView->pCopList, ubBallIndex, (UBYTE *)ball2bpl16x16_frame1_data, sizeof(ball2bpl16x16_frame1_data), s_uwCopRawOffs);
         moverMove(g_pBallsMovers[ubBallIndex]);
         /*vPortWaitForEnd(s_pVpMain);
@@ -442,7 +438,7 @@ for (UBYTE ubPerspectiveCounter = 0;ubPerspectiveCounter<PERSPECTIVEBARSNUMBER; 
     blitRect(s_pMainBuffer->pBack, 2*32-ubPerspectiveCounter*4, 208+ubPerspectiveCounter*PERSECTIVEBARHEIGHT, 25+ubPerspectiveCounter*4, PERSECTIVEBARHEIGHT,1+2);*/
 }
 #endif
-/*blitRect(s_pMainBuffer->pBack, 5*32, 208, 25, 3,1+5);
+    /*blitRect(s_pMainBuffer->pBack, 5*32, 208, 25, 3,1+5);
 blitRect(s_pMainBuffer->pBack, 5*32, 211, 26, 3,1+5);
 
 blitRect(s_pMainBuffer->pBack, 4*32, 208, 25, 3,1+4);
@@ -515,7 +511,7 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
         printPerspectiveRow2(s_pMainBuffer, uwCounter, 48, uwRowWidth);
         //printPerspectiveRow3(uwCounter, 48, uwRowWidth);
         UBYTE *p_ubBitplane0Pointer = (UBYTE *)((ULONG)s_pMainBuffer->pBack->Planes[0]);
-        (*p_ubBitplane0Pointer)=0xFF;
+        (*p_ubBitplane0Pointer) = 0xFF;
         if ((uwCounter % PERSECTIVEBARHEIGHT) == 0)
             uwRowWidth += 3;
     }
@@ -540,11 +536,6 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     copSetWaitBackAndFront(0, 43);
 
     SETBARCOLORSFRONTANDBACK;
-
-    /*copSetWaitBackAndFront(0, 200);
-    copSetMoveBackAndFront(&g_pCustom->color[0], 0x0000);
-    copSetMoveBackAndFront(&g_pCustom->color[0], 0x0000);
-    copSetMoveBackAndFront(&g_pCustom->color[0], 0x0000);*/
 
     // Sprites colors
     // Sprite 0 and 1
@@ -601,36 +592,12 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
 
-
-
     // Load the view
     viewLoad(s_pView);
 }
 
 void gameGsLoop(void)
 {
-
-   /*g_pCustom->color[16] = 0x000F;
-    g_pCustom->color[17] = 0x0edd;
-    g_pCustom->color[18] = 0x0922;
-    g_pCustom->color[19] = 0x0b77;
-
-    g_pCustom->color[20] = 0x000F;
-    g_pCustom->color[21] = 0x0edd;
-    g_pCustom->color[22] = 0x0922;
-    g_pCustom->color[23] = 0x0b77;
-
-     g_pCustom->color[24] = 0x000F;
-    g_pCustom->color[25] = 0x0edd;
-    g_pCustom->color[26] = 0x0922;
-    g_pCustom->color[27] = 0x0b77;
-
-     g_pCustom->color[28] = 0x000F;
-    g_pCustom->color[29] = 0x0edd;
-    g_pCustom->color[30] = 0x0922;
-    g_pCustom->color[31] = 0x0b77;*/
-
-    //mt_music();
 
 #ifdef COLORDEBUG
     g_pCustom->color[0] = 0x0FF0;
@@ -786,7 +753,7 @@ void gameGsLoop(void)
         for (UBYTE ubBallIndex = 0; ubBallIndex < MAXBALLS; ubBallIndex++)
         {
             //g_pBallsMovers
-            tMover* g_SpriteVector = &g_pBallsMovers[ubBallIndex];
+            tMover *g_SpriteVector = &g_pBallsMovers[ubBallIndex];
 
             spriteVectorApplyForce(g_SpriteVector, &g_Gravity);
             moverAddAccellerationToVelocity(g_SpriteVector);
@@ -832,12 +799,6 @@ void gameGsLoop(void)
     static BYTE bExitSequence = 11;
     if (bXCamera == 0 && bIsExiting && lastBx == 1)
     {
-        /*BYTE bColorIndex = 11 + s_ubColorIndex;
-        while (bColorIndex > 11)
-            bColorIndex -= 12;
-        s_pBarColors[bColorIndex] = 0x0000;
-        s_pBarColorsPerspective[bColorIndex] = 0x0000;
-        s_pBarColorsPerspectiveBack[bColorIndex] = 0x0000;*/
         setHiddenRightBarColors(0x0000, 0x0000, 0x0000);
 #ifdef ACE_DEBUG
         logWrite("Setting intro color to zero to index number\n");
@@ -845,13 +806,21 @@ void gameGsLoop(void)
 
         if (bExitSequence < 0)
         {
-            //gameExit();
             stateChange(g_pGameStateManager, g_pGameStates[2]);
             return;
         }
         bExitSequence--;
         lastBx = 0;
     }
+
+    // automatic control
+    static ULONG ulFrameNo = 0;
+
+    if (ulFrameNo == 100)
+        ubMoveBalls = 1;
+    if (ulFrameNo == 1000)
+        bIsExiting = 1;
+    ulFrameNo++;
 }
 
 void gameGsDestroy(void)
@@ -1082,20 +1051,20 @@ void printPerspectiveRow3(const UWORD uwRowNo, const UWORD uwBytesPerRow, const 
     UBYTE *p_ubBitplane3Pointer = (UBYTE *)((ULONG)s_pMainBuffer->pBack->Planes[3]);
     UBYTE ubBarCounter = 4;
 
-    UBYTE * p_ubBitplane0StartPointer = p_ubBitplane0Pointer + 4 * 4 + 3;
+    UBYTE *p_ubBitplane0StartPointer = p_ubBitplane0Pointer + 4 * 4 + 3;
 
-    while (p_ubBitplane0StartPointer>=p_ubBitplane0Pointer)
+    while (p_ubBitplane0StartPointer >= p_ubBitplane0Pointer)
     {
         /*if ((ubBarCounter % 2) == 0)
             *p_ubBitplane0StartPointer |= BV(bBytePos);*/
-        for (BYTE bBytePos = 7 ; bBytePos>=0 ;  bBytePos--)
+        for (BYTE bBytePos = 7; bBytePos >= 0; bBytePos--)
         {
-           if (bBytePos==0) *p_ubBitplane0StartPointer |= BV(bBytePos);
+            if (bBytePos == 0)
+                *p_ubBitplane0StartPointer |= BV(bBytePos);
         }
-        
+
         p_ubBitplane0StartPointer--;
     }
-
 }
 
 void printPerspectiveRow2(tSimpleBufferTestManager *s_pMainBuffer, const UWORD uwRowNo, const UWORD uwBytesPerRow, const UWORD uwBarWidth)
