@@ -9,15 +9,23 @@
 
 #include "fonts.h"
 
+#include <proto/exec.h>
+#include <proto/dos.h>
+
 static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
 static char g_cPhrase[] = {"THANKS TO OFFENCE AND ATLANTIS FOR THEIR GOATLIGHT DEMO, AWESOME!!!!        \n"};
 void printCharToRight(char);
 void scorri();
+BPTR file2;
 
 void slidingTxtGsCreate(void)
 {
+ /* systemUseNoInts2();
+    file2 = Open("data/resistance_final.raw", MODE_OLDFILE);
+     Close(file2);
+    systemUnuseNoInts2();*/
   // Create a view - first arg is always zero, then it's option-value
   s_pView = viewCreate(0,
                        TAG_VIEW_GLOBAL_CLUT, 1, // Same Color LookUp Table for all viewports
@@ -41,16 +49,17 @@ void slidingTxtGsCreate(void)
   s_pVpMain->pPalette[2] = 0x0800; // Red - not max, a bit dark
   s_pVpMain->pPalette[3] = 0x0008; // Blue - same brightness as red
 
+  //systemUnuse();
+
   // Load the view
   viewLoad(s_pView);
 
-  //printCharToRight('B');
+  
 }
 
 void slidingTxtGsLoop(void)
 {
-  // This will loop forever until you "pop" or change gamestate
-  // or close the game
+  
 
   if (keyCheck(KEY_C))
   {
@@ -67,7 +76,9 @@ void slidingTxtGsLoop(void)
       if (*s_pPhrasePointer == '\n')
       {
         s_pPhrasePointer = &g_cPhrase[0];
-        stateChange(g_pGameStateManager, g_pGameStates[3]);
+        
+        //stateChange(g_pGameStateManager, g_pGameStates[3]);
+        myChangeState(3);
       }
     }
     scorri();

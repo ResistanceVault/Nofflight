@@ -9,6 +9,7 @@
 #include "../include/resistancelogo.h"
 #include "../include/metaballschunky.h"
 #include "slidingtext.h"
+#include "radiallineshiddenpart.h"
 #include "../include/Dirty_Tricks.h"
 //#include "player610.6.no_cia.bin.h"
 //#include "testmod.p61.h"
@@ -74,7 +75,9 @@ void genericCreate(void)
   g_pGameStates[1] = stateCreate(gameGsCreate, gameGsLoop, gameGsDestroy, 0, 0, 0);
   g_pGameStates[2] = stateCreate(slidingTxtGsCreate, slidingTxtGsLoop, slidingTxtGsDestroy, 0, 0, 0);
   g_pGameStates[3] = stateCreate(metaballsGsCreate, metaballsGsLoop, metaballsGsDestroy, 0, 0, 0);
+  g_pGameStates[4] = stateCreate(radialLinesGsCreate, radialLinesGsLoop, radialLinesGsDestroy, 0, 0, 0);
   stateChange(g_pGameStateManager, g_pGameStates[0]);
+  //stateChange(g_pGameStateManager, g_pGameStates[3]);
   systemSetInt(INTB_VERTB, interruptHandlerMusic2, 0);
 }
 
@@ -94,6 +97,7 @@ void genericDestroy(void)
   stateDestroy(g_pGameStates[1]);
   stateDestroy(g_pGameStates[2]);
   stateDestroy(g_pGameStates[3]);
+  stateDestroy(g_pGameStates[4]);
 
   keyDestroy(); // We don't need it anymore
   logWrite("Goodbye, Amiga!\n");

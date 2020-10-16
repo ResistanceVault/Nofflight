@@ -27,14 +27,17 @@ static tSimpleBufferManager *s_pMainBuffer;
 
 static UBYTE *pBuffer;
 
+void stateChange2(tStateManager *pStateManager, tState *pState);
+
+
 void resistanceLogoGsCreate(void)
 {
-    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(5) + 3);
+    //ULONG ulRawSize = (SimpleBufferGetRawCopperlistInstructionCount(5) + 3);
 
     s_pView = viewCreate(0,
                          TAG_VIEW_GLOBAL_CLUT, 1, // Same Color LookUp Table for all viewports
-                         TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
-                         TAG_VIEW_COPLIST_RAW_COUNT, ulRawSize,
+    //                     TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
+    //                     TAG_VIEW_COPLIST_RAW_COUNT, ulRawSize,
                          TAG_END); // Must always end with TAG_END or synonym: TAG_DONE
 
     s_pVpMain = vPortCreate(0,
@@ -45,11 +48,11 @@ void resistanceLogoGsCreate(void)
     s_pMainBuffer = simpleBufferCreate(0,
                                        TAG_SIMPLEBUFFER_VPORT, s_pVpMain, // Required: parent viewport
                                        TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
-                                       TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
+     //                                  TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
 
                                        TAG_END);
 
-    UWORD s_uwCopRawOffs = SimpleBufferTestGetRawCopperlistInstructionCount(5);
+    //UWORD s_uwCopRawOffs = SimpleBufferTestGetRawCopperlistInstructionCount(5);
 
     s_pVpMain->pPalette[0] = 0x0000;
     s_pVpMain->pPalette[1] = 0x0FFF;
@@ -99,29 +102,6 @@ void resistanceLogoGsCreate(void)
     // Load the view
     viewLoad(s_pView);
 
-// Start music
-#ifdef MUSIC_ON
-
-    mt_init(Dirty_Tricks_data);
-    systemSetInt(INTB_VERTB, interruptHandlerMusic, 0);
-
-#endif
-
-#if 0
-    systemUseNoInts2();
-    Execute("copy data/resistance_final.plt to ram:resistance_final.plt", 0, 0);
-    Execute("copy data/resistance_final.raw to ram:resistance_final.raw", 0, 0);
-    systemUnuseNoInts2();
-
-
-
-    static BPTR file = 0;
-    systemUseNoInts();
-    file = Open("ram:resistance_final.raw", MODE_OLDFILE);
-    Read(file, buf, 200);
-    Close(file);
-    systemUnuseNoInts();
-#endif
 }
 
 //char buf[51200];
@@ -137,7 +117,7 @@ void resistanceLogoGsLoop(void)
         gameExit();
     }*/
 
-    static int copy = 0;
+    static int copy = 1;
     if (!copy)
     {
 #if 1
@@ -145,6 +125,8 @@ void resistanceLogoGsLoop(void)
         Execute("copy data/resistance_final.raw to ram:resistance_final.raw", 0, 0);
         copy = 1;
         systemUnuseNoInts2();
+
+      
         //sleep(10);
         //return ;
         //#else
@@ -154,16 +136,22 @@ void resistanceLogoGsLoop(void)
 
     else if (copy == 1)
     {
+        
         copy = 2;
         BPTR file = 0;
-        systemUseNoInts();
-        file = Open("ram:resistance_final.raw", MODE_OLDFILE);
+       systemUseNoInts2();
+       //systemSetDma(DMAB_DISK, 1);
+       //systemUse();
+        file = Open("data/resistance_final.raw", MODE_OLDFILE);
         if (!file)
             gameExit();
         Read(file, pBuffer, 51200);
         Close(file);
-        unlink("ram:resistance_final.raw");
-        systemUnuseNoInts();
+        //unlink("ram:resistance_final.raw");
+        systemUnuseNoInts2();
+        //systemUse();
+        //systemSetDma(DMAB_DISK, 0);
+        
     }
     else if (copy == 2)
     {
@@ -285,14 +273,19 @@ void resistanceLogoGsLoop(void)
 
             if ((iFrameNo % 10) == 0)
                 bDimCounter2--;
+
         }
 
         //gameExit();return ;
     }
     if (bDimCounter2 < 0)
     {
-        stateChange(g_pGameStateManager, g_pGameStates[1]);
-        //gameExit();
+        //stateChange(g_pGameStateManager, g_pGameStates[1]);
+        // lol3();
+         //gameExit();
+         myChangeState(1);
+        return ;
+       
     }
     if (copy >= 3)
         iFrameNo++;
@@ -302,11 +295,93 @@ void resistanceLogoGsLoop(void)
 
 void resistanceLogoGsDestroy(void)
 {
+ 
+     
     FreeMem(pBuffer, 51200);
 
+    
+    
 
     // This will also destroy all associated viewports and viewport managers
     viewDestroy(s_pView);
 
 }
+BPTR file2;
 
+void lol3()
+{
+    
+    //resistanceLogoGsDestroy();
+    //gameGsCreate();
+   
+    //gameExit();
+
+    if (g_pGameStateManager->pCurrent && g_pGameStateManager->pCurrent->cbDestroy) {
+                g_pGameStateManager->pCurrent->cbDestroy();
+        }
+
+         g_pGameStateManager->pCurrent = g_pGameStates[1];
+         //gameGsCreate();
+/*
+        if (g_pGameStateManager->pCurrent) {
+                pState->pPrev = pStateManager->pCurrent->pPrev;
+        }
+        else {
+                pState->pPrev = 0;
+        }*/
+
+       // pStateManager->pCurrent = pState;
+
+        if (g_pGameStateManager->pCurrent && g_pGameStateManager->pCurrent->cbCreate) {
+                g_pGameStateManager->pCurrent->cbCreate();
+        }
+}
+
+
+void stateChange2(tStateManager *pStateManager, tState *pState) {
+ gameExit();
+ systemUseNoInts2();
+       //systemSetDma(DMAB_DISK, 1);
+       //systemUse();
+         file2 = Open("data/resistance_final.raw", MODE_OLDFILE);
+        if (!file2)
+            gameExit();
+        //Read(file, pBuffer, 51200);
+        Close(file2);
+        //unlink("ram:resistance_final.raw");
+        systemUnuseNoInts2();
+        gameExit();
+    /*BPTR file = 0;
+         systemUseNoInts2();
+       //systemSetDma(DMAB_DISK, 1);
+       //systemUse();
+        file = Open("data/resistance_final.raw", MODE_OLDFILE);
+        if (!file)
+            gameExit();
+        //Read(file, pBuffer, 51200);
+        Close(file);
+        //unlink("ram:resistance_final.raw");
+        systemUnuseNoInts2();*/
+        gameExit();
+
+        if (pStateManager->pCurrent && pStateManager->pCurrent->cbDestroy) {
+                //pStateManager->pCurrent->cbDestroy();
+        }
+
+        if (pStateManager->pCurrent) {
+                pState->pPrev = pStateManager->pCurrent->pPrev;
+        }
+        else {
+                pState->pPrev = 0;
+        }
+
+        pStateManager->pCurrent = pState;
+
+        if (pStateManager->pCurrent && pStateManager->pCurrent->cbCreate) {
+                //pStateManager->pCurrent->cbCreate();
+        }
+
+        
+      
+
+}

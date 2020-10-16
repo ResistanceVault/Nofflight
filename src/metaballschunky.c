@@ -39,12 +39,24 @@ static UWORD s_uwCopRawOffs = 0;
 static tCopCmd *pCopCmds;
 static UWORD g_sWaitPositions[YRES];
 static UBYTE *pBuffer;
- tView * g_tViewLateDestroy;
+ tView * g_tViewLateDestroy=NULL;
 
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue);
 
+BPTR file2;
+
+
 void metaballsGsCreate(void)
 {
+pBuffer = AllocMem(192000, MEMF_CHIP);
+   systemUseNoInts2();
+    file2 = Open((CONST_STRPTR)"data/colors.bin", MODE_OLDFILE);
+    Read(file2, pBuffer, 192000);
+     Close(file2);
+    systemUnuseNoInts2();
+    //gameExit();
+
+
   ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +
                      YRES + 1 +    // yres is 16 so we need 16 waits + 1 for checking the 255th line
                      XRES * YRES + //reserve space for 20 colors for each YRES
@@ -75,6 +87,7 @@ void metaballsGsCreate(void)
   s_uwCopRawOffs = simpleBufferGetRawCopperlistInstructionCount(BITPLANES);
   tCopBfr *pCopBfr = s_pView->pCopList->pBackBfr;
   pCopCmds = &pCopBfr->pList[s_uwCopRawOffs];
+
 
   // Since we've set up global CLUT, palette will be loaded from first viewport
   // Colors are 0x0RGB, each channel accepts values from 0 to 15 (0 to F).
@@ -111,6 +124,8 @@ void metaballsGsCreate(void)
   s_pVpMain->pPalette[20] = 0x0055;
   s_pVpMain->pPalette[21] = 0x0066;
 
+  
+
   systemSetDma(DMAB_SPRITE, 0);
 
   /*
@@ -128,6 +143,9 @@ Bitplane 4 -      0   0   0   0        0   0   0   0        0   0    0    0    0
   {
     blitRect(s_pMainBuffer->pBack, ubCont * 16, 0, 16, 256, ubCont + 1);
   }
+
+  
+
 
   tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
   tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
@@ -177,13 +195,24 @@ Bitplane 4 -      0   0   0   0        0   0   0   0        0   0    0    0    0
     }
   }
 
-  pBuffer = AllocMem(192000, MEMF_CHIP);
+  
+  
+  //pBuffer = colors_data;
 
-  systemUseNoInts2();
-  Execute((CONST_STRPTR)"copy data/colors.bin to ram:colors.bin", 0, 0);
-  systemUnuseNoInts2();
+  //pBuffer = AllocMem(192000, MEMF_CHIP);
 
-  BPTR file = 0;
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  /*BPTR file = 0;
   systemUseNoInts();
   file = Open((CONST_STRPTR)"ram:colors.bin", MODE_OLDFILE);
   if (!file)
@@ -191,11 +220,17 @@ Bitplane 4 -      0   0   0   0        0   0   0   0        0   0    0    0    0
   Read(file, pBuffer, 192000);
   Close(file);
   unlink("ram:colors.bin");
-  systemUnuseNoInts();
+  systemUnuseNoInts();*/
 
+  
+  //systemUnuse();
   // Load the view
   viewLoad(s_pView);
-  viewDestroy((tView *)g_tViewLateDestroy);
+
+  
+  
+ // if (g_tViewLateDestroy) viewDestroy((tView *)g_tViewLateDestroy);
+  
 }
 
 void metaballsGsLoop(void)
@@ -203,6 +238,35 @@ void metaballsGsLoop(void)
 #ifdef COLORDEBUG
   g_pCustom->color[0] = 0x0FF0;
 #endif
+
+  static int copy =2;
+  if (!copy)
+  {
+    systemUnuseNoInts2();
+        Execute("copy data/resistance_final.raw to ram:resistance_final.raw", 0, 0);
+        //Execute("list",0,0);
+       // SystemTagList("copy data/resistance_final.raw to ram:resistance_final.raw",0);
+        copy = 1;
+       systemUnuseNoInts2();
+       gameExit();
+  copy = 2;
+  return ;
+  }
+  else if (copy==1)
+  {
+    BPTR file = 0;
+  systemUseNoInts();
+  file = Open((CONST_STRPTR)"data/colors.bin", MODE_OLDFILE);
+  if (!file)
+    gameExit();
+  Read(file, pBuffer, 192000);
+  Close(file);
+  //unlink("ram:colors.bin");
+  systemUnuseNoInts();
+  copy=2;
+  return ;
+  }
+
 
   static UWORD uwFrameNo = 0;
   //static UBYTE *pColorPtr = &colors_data[0];
@@ -214,6 +278,7 @@ void metaballsGsLoop(void)
   if (keyCheck(KEY_ESCAPE))
   {
     gameExit();
+    stateChange(g_pGameStateManager, g_pGameStates[4]);
   }
 
   if (keyUse(KEY_D))
@@ -253,6 +318,11 @@ void metaballsGsLoop(void)
     uwFrameNo = 0;
     //pColorPtr = &colors_data[0];
     pColorPtr = pBuffer;
+    //stateChange(g_pGameStateManager, g_pGameStates[4]);
+    myChangeState(4);
+    //gameExit();
+
+    return ;
   }
 
 #ifdef COLORDEBUG
@@ -269,7 +339,7 @@ void metaballsGsDestroy(void)
   FreeMem(pBuffer, 192000);
 
   // Cleanup when leaving this gamestate
-  systemUse();
+  //systemUse();
 
   // This will also destroy all associated viewports and viewport managers
   viewDestroy(s_pView);

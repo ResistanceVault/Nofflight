@@ -13,6 +13,8 @@
 
 #include "globals.h"
 //#include "../include/Dirty_Tricks.h"
+#include <proto/exec.h>
+#include <proto/dos.h>
 
 #define BITPLANES 4 // 4 bitplanes
 
@@ -351,9 +353,14 @@ v2d g_Gravity;
 #define LITTLE_BALLS_MASS 2
 
 tView *g_tViewLateDestroy;
+BPTR file2;
 
 void gameGsCreate(void)
 {
+    /*systemUseNoInts2();
+     file2 = Open("data/resistance_final.raw", MODE_OLDFILE);
+     Close(file2);
+    systemUnuseNoInts2();*/
     // ULONG ulRawSize = SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES)+16;
     ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES) + MAXBALLS * 2 + ACE_SPRITES_COPPERLIST_SIZE + 10 + MAXCOLORS * 4 + PERSPECTIVEBLOCKSIZE * (PERSPECTIVEBARSNUMBER + PERSPECTIVEBARSNUMBERBACK) + 1
                        /*                   3 * 3 + // 32 bars - each consists of WAIT + 3 MOVE instruction
@@ -396,7 +403,7 @@ void gameGsCreate(void)
     //mt_init(Dirty_Tricks_data);
     /*systemSetInt(INTB_VERTB, 0, 0);
     systemSetInt(INTB_COPER, interruptHandlerMusic, 0);*/
-    systemUnuse();
+    //systemUnuse();
 
     for (UBYTE ubBallIndex = 0; ubBallIndex < MAXBALLS; ubBallIndex++)
     {
@@ -504,6 +511,7 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     }
 #endif
 
+
     // Start building/drawing perspective rows
     UWORD uwRowWidth = 25;
     for (UWORD uwCounter = 208; uwCounter < 208 + PERSPECTIVEBARSNUMBER * PERSECTIVEBARHEIGHT; uwCounter++)
@@ -526,6 +534,7 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     }
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
+    
 
     tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
     tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
@@ -565,8 +574,10 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
 
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
+    
 
     ubCopIndex = buildPerspectiveCopperlist(ubCopIndex);
+
 
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
@@ -589,15 +600,25 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     g_ubHBounceEnabled = 0;
     g_ubVBounceEnabled = 1;
 
+    
+
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
+    //systemUnuse();
+
+    
 
     // Load the view
     viewLoad(s_pView);
+
+   
+    
 }
 
 void gameGsLoop(void)
 {
+
+    
 
 #ifdef COLORDEBUG
     g_pCustom->color[0] = 0x0FF0;
@@ -806,7 +827,14 @@ void gameGsLoop(void)
 
         if (bExitSequence < 0)
         {
-            stateChange(g_pGameStateManager, g_pGameStates[2]);
+            //stateChange(g_pGameStateManager, g_pGameStates[2]);
+           /*  systemUseNoInts2();
+    file2 = Open("data/resistance_final.raw", MODE_OLDFILE);
+     Close(file2);
+    systemUnuseNoInts2();
+    gameExit();*/
+
+            myChangeState(2);
             return;
         }
         bExitSequence--;
@@ -816,9 +844,28 @@ void gameGsLoop(void)
     // automatic control
     static ULONG ulFrameNo = 0;
 
+    if (ulFrameNo >=600 && ulFrameNo <=900 && (ulFrameNo%4)==0)
+    {
+        sg_tVelocity = fix16_sub(sg_tVelocity, sg_tVelocityIncrementer);
+    }
+
+    if (ulFrameNo >=1000 && ulFrameNo <=1700 && (ulFrameNo%6)==0)
+    {
+        sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
+    }
+
+    // Decrease speed in autoscolling mode
+    /*if (ulFrameNo >300 && ulFrameNo<=600)
+    {
+        sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
+    }*/
+
+    // Start moving balls at 100
     if (ulFrameNo == 100)
         ubMoveBalls = 1;
-    if (ulFrameNo == 1000)
+
+    // Exit at 2000
+    if (ulFrameNo == 2000)
         bIsExiting = 1;
     ulFrameNo++;
 }
@@ -827,7 +874,7 @@ void gameGsDestroy(void)
 {
 
     // Cleanup when leaving this gamestate
-    systemUse();
+    //systemUse();
 
     // Free sprite stuff
     copBlockSpritesFree();
