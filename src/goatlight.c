@@ -353,7 +353,10 @@ v2d g_Gravity;
 #define LITTLE_BALLS_MASS 2
 
 tView *g_tViewLateDestroy;
-BPTR file2;
+//BPTR file2;
+
+static UWORD uwChan3PlayedArray[15];
+static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV);
 
 void gameGsCreate(void)
 {
@@ -511,7 +514,6 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     }
 #endif
 
-
     // Start building/drawing perspective rows
     UWORD uwRowWidth = 25;
     for (UWORD uwCounter = 208; uwCounter < 208 + PERSPECTIVEBARSNUMBER * PERSECTIVEBARHEIGHT; uwCounter++)
@@ -534,7 +536,6 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     }
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
-    
 
     tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
     tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
@@ -574,10 +575,8 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
 
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
-    
 
     ubCopIndex = buildPerspectiveCopperlist(ubCopIndex);
-
 
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
@@ -600,30 +599,65 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     g_ubHBounceEnabled = 0;
     g_ubVBounceEnabled = 1;
 
-    
+    //for (UBYTE ubHueCount = 0;ubHueCount<15;ubHueCount++)
+    uwChan3PlayedArray[6] = 0x0C87;
+    uwChan3PlayedArray[5] = 0x0CA7;
+    uwChan3PlayedArray[4] = 0x0CB7;
+    uwChan3PlayedArray[3] = 0x0CC7;
+    uwChan3PlayedArray[2] = 0x0CD7;
+    uwChan3PlayedArray[1] = 0x0CE7;
+    uwChan3PlayedArray[0] = 0x0CF7;
 
     /*vPortWaitForEnd(s_pVpMain);
     mt_music();*/
     //systemUnuse();
 
-    
-
     // Load the view
     viewLoad(s_pView);
-
-   
-    
 }
 
 void gameGsLoop(void)
 {
+    static ULONG ulFrameNo = 0;
+    static BYTE bIsExiting = 0;
+    if (ulFrameNo >= 300 && bIsExiting == 0)
+    {
+        static BYTE bChan3Index = 0;
+        /* static UWORD uwChan3PlayedArray[11] = {
+            0x0F00,
+            0x0E00,
+            0x0D00,
+            0x0C00,
+            0x0B00,
+            0x0A00,
+            0x0900,
+            0x0800,
+            0x0700,
+            0x0600,
+            0x0500,
+        };*/
 
-    
+        if (g_iChan4Played)
+            bChan3Index = 0;
+        else
+        {
+            bChan3Index++;
+            if (bChan3Index > 6)
+                bChan3Index = 6;
+        }
+        s_pBarColors[0] = uwChan3PlayedArray[bChan3Index];
+        s_pBarColors[4] = uwChan3PlayedArray[bChan3Index];
+        s_pBarColors[8] = uwChan3PlayedArray[bChan3Index];
 
+        /*if (g_iChan4Played)
+            s_pBarColors[1] = 0x0888;
+        else
+            s_pBarColors[1] = s_pBarColors2[1];*/
+    }
 #ifdef COLORDEBUG
     g_pCustom->color[0] = 0x0FF0;
 #endif
-    static BYTE bIsExiting = 0;
+
     static BYTE bXCamera = 0;
 
 #ifdef AUTOSCROLLING
@@ -828,7 +862,7 @@ void gameGsLoop(void)
         if (bExitSequence < 0)
         {
             //stateChange(g_pGameStateManager, g_pGameStates[2]);
-           /*  systemUseNoInts2();
+            /*  systemUseNoInts2();
     file2 = Open("data/resistance_final.raw", MODE_OLDFILE);
      Close(file2);
     systemUnuseNoInts2();
@@ -842,14 +876,12 @@ void gameGsLoop(void)
     }
 
     // automatic control
-    static ULONG ulFrameNo = 0;
-
-    if (ulFrameNo >=600 && ulFrameNo <=900 && (ulFrameNo%4)==0)
+    if (ulFrameNo >= 600 && ulFrameNo <= 900 && (ulFrameNo % 4) == 0)
     {
         sg_tVelocity = fix16_sub(sg_tVelocity, sg_tVelocityIncrementer);
     }
 
-    if (ulFrameNo >=1000 && ulFrameNo <=1700 && (ulFrameNo%6)==0)
+    if (ulFrameNo >= 1000 && ulFrameNo <= 1700 && (ulFrameNo % 6) == 0)
     {
         sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
     }
@@ -1629,4 +1661,42 @@ void setHiddenRightBarColors(UWORD ubColorRectangle, UWORD ubColorPerspective, U
     s_pBarColors[bColorIndex] = ubColorRectangle;
     s_pBarColorsPerspective[bColorIndex] = ubColorPerspective;
     s_pBarColorsPerspectiveBack[bColorIndex] = ubColorPerspectiveBack;
+}
+
+static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV)
+{
+    UBYTE ubRegion, ubRem, p, q, t;
+
+    if (ubS == 0)
+    {
+        ubV >>= 4; // 12-bit fit
+        return (ubV << 8) | (ubV << 4) | ubV;
+    }
+
+    ubRegion = ubH / 43;
+    ubRem = (ubH - (ubRegion * 43)) * 6;
+
+    p = (ubV * (255 - ubS)) >> 8;
+    q = (ubV * (255 - ((ubS * ubRem) >> 8))) >> 8;
+    t = (ubV * (255 - ((ubS * (255 - ubRem)) >> 8))) >> 8;
+
+    ubV >>= 4;
+    p >>= 4;
+    q >>= 4;
+    t >>= 4; // 12-bit fit
+    switch (ubRegion)
+    {
+    case 0:
+        return (ubV << 8) | (t << 4) | p;
+    case 1:
+        return (q << 8) | (ubV << 4) | p;
+    case 2:
+        return (p << 8) | (ubV << 4) | t;
+    case 3:
+        return (p << 8) | (q << 4) | ubV;
+    case 4:
+        return (t << 8) | (p << 4) | ubV;
+    default:
+        return (ubV << 8) | (p << 4) | q;
+    }
 }

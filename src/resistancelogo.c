@@ -7,8 +7,8 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/key.h> // Keyboard processing
 
-#include <proto/exec.h>
-#include <proto/dos.h>
+/*#include <proto/exec.h>
+#include <proto/dos.h>*/
 
 #include "../include/main.h"
 
@@ -27,7 +27,7 @@ static tSimpleBufferManager *s_pMainBuffer;
 
 static UBYTE *pBuffer;
 
-void stateChange2(tStateManager *pStateManager, tState *pState);
+//void stateChange2(tStateManager *pStateManager, tState *pState);
 
 
 void resistanceLogoGsCreate(void)
@@ -94,7 +94,7 @@ void resistanceLogoGsCreate(void)
     //tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
     //tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
 
-    pBuffer = AllocMem(51200, MEMF_CHIP);
+    //pBuffer = AllocMem(51200, MEMF_CHIP);
 
     // We don't need anything from OS anymore
     systemUnuse();
@@ -120,17 +120,12 @@ void resistanceLogoGsLoop(void)
     static int copy = 1;
     if (!copy)
     {
-#if 1
+        copy = 1;
+#if 0
         systemUseNoInts2();
         Execute("copy data/resistance_final.raw to ram:resistance_final.raw", 0, 0);
         copy = 1;
         systemUnuseNoInts2();
-
-      
-        //sleep(10);
-        //return ;
-        //#else
-
 #endif
     }
 
@@ -138,6 +133,8 @@ void resistanceLogoGsLoop(void)
     {
         
         copy = 2;
+        pBuffer = g_pBuffer;
+#if 0
         BPTR file = 0;
        systemUseNoInts2();
        //systemSetDma(DMAB_DISK, 1);
@@ -151,6 +148,7 @@ void resistanceLogoGsLoop(void)
         systemUnuseNoInts2();
         //systemUse();
         //systemSetDma(DMAB_DISK, 0);
+#endif
         
     }
     else if (copy == 2)
@@ -223,7 +221,7 @@ void resistanceLogoGsLoop(void)
             bDimCounter++;
     }
 
-    if (iFrameNo > 400)
+    if (iFrameNo > 300)
     {
         if (bDimCounter2 >= 0)
         {
@@ -295,49 +293,15 @@ void resistanceLogoGsLoop(void)
 
 void resistanceLogoGsDestroy(void)
 {
- 
-     
     FreeMem(pBuffer, 51200);
-
-    
-    
 
     // This will also destroy all associated viewports and viewport managers
     viewDestroy(s_pView);
 
 }
-BPTR file2;
+//BPTR file2;
 
-void lol3()
-{
-    
-    //resistanceLogoGsDestroy();
-    //gameGsCreate();
-   
-    //gameExit();
-
-    if (g_pGameStateManager->pCurrent && g_pGameStateManager->pCurrent->cbDestroy) {
-                g_pGameStateManager->pCurrent->cbDestroy();
-        }
-
-         g_pGameStateManager->pCurrent = g_pGameStates[1];
-         //gameGsCreate();
-/*
-        if (g_pGameStateManager->pCurrent) {
-                pState->pPrev = pStateManager->pCurrent->pPrev;
-        }
-        else {
-                pState->pPrev = 0;
-        }*/
-
-       // pStateManager->pCurrent = pState;
-
-        if (g_pGameStateManager->pCurrent && g_pGameStateManager->pCurrent->cbCreate) {
-                g_pGameStateManager->pCurrent->cbCreate();
-        }
-}
-
-
+#if 0
 void stateChange2(tStateManager *pStateManager, tState *pState) {
  gameExit();
  systemUseNoInts2();
@@ -385,3 +349,4 @@ void stateChange2(tStateManager *pStateManager, tState *pState) {
       
 
 }
+#endif

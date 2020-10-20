@@ -9,6 +9,8 @@
 #include "../include/resistancelogo.h"
 #include "../include/metaballschunky.h"
 #include "slidingtext.h"
+#include "flashimage.h"
+
 #include "radiallineshiddenpart.h"
 #include "../include/Dirty_Tricks.h"
 //#include "player610.6.no_cia.bin.h"
@@ -20,7 +22,8 @@ tState *g_pGameStates[GAME_STATE_COUNT] = {0};
 long mt_init(const unsigned char *);
 void mt_music();
 void mt_end();
-
+int chan3played();
+int chan4played();
 
 
 /*int p61Init(const void* module) { // returns 0 if success, non-zero otherwise
@@ -58,12 +61,25 @@ static void INTERRUPT interruptHandlerMusic2()
     g_pCustom->intreq=(1<<INTB_VERTB); g_pCustom->intreq=(1<<INTB_VERTB);
     //p61Music();
     mt_music();
+    g_iChan3Played = chan3played();
+    g_iChan4Played = chan4played();
   }
     //chan3played();
 }
 
 void genericCreate(void)
 {
+  // Load first asset (resistance logo)
+  systemUseNoInts2();
+  BPTR file = Open((STRPTR)"data/resistance_final.raw", MODE_OLDFILE);
+  if (!file)
+    gameExit();
+  g_pBuffer = AllocMem(51200, MEMF_CHIP);
+  Read(file, g_pBuffer, 51200);
+  Close(file);
+  systemUnuseNoInts2();
+
+  // Init music
   mt_init(Dirty_Tricks_data);
   //p61Init(testmod_data);
 
@@ -73,7 +89,7 @@ void genericCreate(void)
   g_pGameStateManager = stateManagerCreate();
   g_pGameStates[0] = stateCreate(resistanceLogoGsCreate, resistanceLogoGsLoop, resistanceLogoGsDestroy, 0, 0, 0);
   g_pGameStates[1] = stateCreate(gameGsCreate, gameGsLoop, gameGsDestroy, 0, 0, 0);
-  g_pGameStates[2] = stateCreate(slidingTxtGsCreate, slidingTxtGsLoop, slidingTxtGsDestroy, 0, 0, 0);
+  g_pGameStates[2] = stateCreate(flashimageGsCreate, flashimageGsLoop, flashimageGsDestroy, 0, 0, 0);
   g_pGameStates[3] = stateCreate(metaballsGsCreate, metaballsGsLoop, metaballsGsDestroy, 0, 0, 0);
   g_pGameStates[4] = stateCreate(radialLinesGsCreate, radialLinesGsLoop, radialLinesGsDestroy, 0, 0, 0);
   stateChange(g_pGameStateManager, g_pGameStates[0]);
