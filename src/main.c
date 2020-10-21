@@ -3,7 +3,6 @@
 #include <ace/managers/key.h>
 #include <ace/managers/state.h>
 
-// Without it compiler will yell about undeclared gameGsCreate etc
 #include "../include/main.h"
 #include "../include/flash2021.h"
 #include "../include/resistancelogo.h"

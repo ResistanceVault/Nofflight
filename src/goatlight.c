@@ -356,7 +356,7 @@ tView *g_tViewLateDestroy;
 //BPTR file2;
 
 static UWORD uwChan3PlayedArray[15];
-static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV);
+//static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV);
 
 void gameGsCreate(void)
 {
@@ -1662,7 +1662,7 @@ void setHiddenRightBarColors(UWORD ubColorRectangle, UWORD ubColorPerspective, U
     s_pBarColorsPerspective[bColorIndex] = ubColorPerspective;
     s_pBarColorsPerspectiveBack[bColorIndex] = ubColorPerspectiveBack;
 }
-
+#if 0
 static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV)
 {
     UBYTE ubRegion, ubRem, p, q, t;
@@ -1700,3 +1700,4 @@ static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV)
         return (ubV << 8) | (p << 4) | q;
     }
 }
+#endif
