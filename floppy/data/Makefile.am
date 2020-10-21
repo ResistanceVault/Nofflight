@@ -7,4 +7,5 @@ all resistance_final.raw resistance_final.plt: ${IMGDIR}resistance_final.iff
 	cp resistance_final.raw ../../adf/data
 	cp resistance_final.plt ../../adf/data
 
-clean: rm *
+clean: 
+	echo "cancello"

@@ -13,8 +13,8 @@
 
 #include "globals.h"
 //#include "../include/Dirty_Tricks.h"
-#include <proto/exec.h>
-#include <proto/dos.h>
+/*#include <proto/exec.h>
+#include <proto/dos.h>*/
 
 #define BITPLANES 4 // 4 bitplanes
 

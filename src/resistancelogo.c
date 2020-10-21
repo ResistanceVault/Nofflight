@@ -1,4 +1,4 @@
-#include "../include/resistancelogo.h"
+//#include "../include/resistancelogo.h"
 
 #include <ace/managers/game.h>                  // For using gameClose
 #include <ace/managers/system.h>                // For systemUnuse and systemUse
@@ -293,7 +293,8 @@ void resistanceLogoGsLoop(void)
 
 void resistanceLogoGsDestroy(void)
 {
-    FreeMem(pBuffer, 51200);
+    //FreeMem(pBuffer, 51200);
+    unLoadRes();
 
     // This will also destroy all associated viewports and viewport managers
     viewDestroy(s_pView);

@@ -13,7 +13,10 @@ extern tState *g_pGameStates[];
 int g_iChan3Played;
 int g_iChan4Played;
 
-UBYTE* g_pBuffer;
+UBYTE* g_pBuffer ;
+ULONG g_ulBufferLength ;
+UBYTE* LoadRes(ULONG ,char* );
+void unLoadRes();
 
 extern tView *g_tViewLateDestroy;
 

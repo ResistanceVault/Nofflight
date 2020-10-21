@@ -7,7 +7,6 @@
 
 #include "../include/main.h"
 
-
 #include "../include/medioeval_gal_LORES_16.h"
 #include "../include/medioeval_gal_LORES_16_plt.h"
 
@@ -23,8 +22,7 @@ static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
 static UWORD *p_uwPalette;
- //tView * g_tViewLateDestroy=NULL;
-
+//tView * g_tViewLateDestroy=NULL;
 
 UWORD paletteColorInc(UWORD uwFullColor, UBYTE ubLevel);
 void copyToMainBpl(const unsigned char *, const UBYTE, const UBYTE);
@@ -33,6 +31,8 @@ UWORD g_uwColors[] = {0x0AAA, 0x0444};
 
 void flashimageGsCreate(void)
 {
+  systemSetDma(DMAB_SPRITE, 0);
+
   // Create a view - first arg is always zero, then it's option-value
   s_pView = viewCreate(0,
                        TAG_VIEW_GLOBAL_CLUT, 1, // Same Color LookUp Table for all viewports
@@ -113,7 +113,7 @@ void flashimageGsDestroy(void)
 
   // This will also destroy all associated viewports and viewport managers
   //viewDestroy(s_pView);
-  g_tViewLateDestroy = (void*)s_pView;
+  g_tViewLateDestroy = (void *)s_pView;
 }
 
 UWORD paletteColorInc(UWORD uwFullColor, UBYTE ubLevel)

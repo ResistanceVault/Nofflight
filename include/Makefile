@@ -129,7 +129,7 @@ AUTOMAKE = ${SHELL} /data/flash2021/missing automake-1.16
 AWK = mawk
 CC = m68k-amigaos-gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -m68000 -msoft-float -fomit-frame-pointer -s -noixemul -ffast-math -DAMIGA -Wall -Wextra -O3
+CFLAGS = -m68000 -msoft-float -fomit-frame-pointer -s -mcrt=nix13 -ffast-math -DAMIGA -Wall -Wextra -O3
 CPP = m68k-amigaos-gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo

@@ -70,14 +70,16 @@ static void INTERRUPT interruptHandlerMusic2()
 void genericCreate(void)
 {
   // Load first asset (resistance logo)
-  systemUseNoInts2();
+  /*systemUseNoInts2();
   BPTR file = Open((STRPTR)"data/resistance_final.raw", MODE_OLDFILE);
   if (!file)
     gameExit();
   g_pBuffer = AllocMem(51200, MEMF_CHIP);
   Read(file, g_pBuffer, 51200);
   Close(file);
-  systemUnuseNoInts2();
+  systemUnuseNoInts2();*/
+
+  LoadRes(51200,"data/resistance_final.raw");
 
   // Init music
   mt_init(Dirty_Tricks_data);
@@ -117,4 +119,24 @@ void genericDestroy(void)
 
   keyDestroy(); // We don't need it anymore
   logWrite("Goodbye, Amiga!\n");
+}
+
+UBYTE* LoadRes(ULONG ulSize,char* pFile)
+{
+  BPTR file2;
+  g_pBuffer = AllocMem(ulSize, MEMF_CHIP);
+  systemUseNoInts2();
+  file2 = Open((CONST_STRPTR)pFile, MODE_OLDFILE);
+  if (file2==0) gameExit();
+  Read(file2, g_pBuffer, ulSize);
+  Close(file2);
+  systemUnuseNoInts2();
+  g_ulBufferLength = ulSize;
+  return g_pBuffer;
+}
+
+void unLoadRes()
+{
+  FreeMem(g_pBuffer,g_ulBufferLength);
+  g_ulBufferLength=0;
 }

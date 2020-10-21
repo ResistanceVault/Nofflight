@@ -25,7 +25,9 @@ Boston, MA 02111-1307, USA.
 
 #include "vectors.h"
 #include "physics.h"
-#include "../_res/radiallinespositions.h"
+#include "../include/main.h"
+
+//#include "../_res/radiallinespositions.h"
 
 // Fonts
 //#include "fonts.h"
@@ -56,15 +58,18 @@ static UWORD s_uwBarY = 44;
 static UWORD s_uwCopRawOffs=0;
 static tMover g_tVector;
 static v2d g_Gravity;
-//static const char g_cPhrase[]={" THANKS TO OFFENCE FOR THIS AWESOME EFFECT AND ABOVE ALL CONGRATULATIONS FOR THE RECENT WIN IN THE ONLINE REVISION 2020 AMIGA DEMO COMPETITION WITH \"CHILLOBITS\", YOU GUYS ARE THE BEST! HOWEVER IT WOULD BE VERY APPRECIATED A NEW AMIGA600 FRIENDLY RELEASE       THX TO FBY FOR THIS AWESOME MUSIC, I DIDNT GET YOUR APPROVATION TO INCLUDE YOUR MOD IN THIS DEMO, BLAME YOUR FRIEND Z3K WHO GAVE ME PERMISSION TO USE IT          YOU HAVE REACHED THE END OF THIS INVITATION DEMO, CLICK LEFT MOUSE BUTTON TO EXIT                \n"};
+unsigned char* radiallinespositions_data;
 
 const unsigned char *uni54_data_shared;
-
+ULONG radiallinespositions_size;
 //unsigned char* s_pMusic;
 
 
 void radialLinesGsCreate(void)
 {
+    radiallinespositions_size = 103360;
+    radiallinespositions_data = LoadRes(radiallinespositions_size,"data/radiallinesallpositions.bin");
+
     ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +
                  32 * 3 + // 32 bars - each consists of WAIT + 2 MOVE instruction
                  1 +      // Final WAIT
@@ -175,8 +180,9 @@ void radialLinesGsLoop(void)
     }
 
     static BYTE bCounter = 0;
-    static UBYTE *ptr = (UBYTE *)radiallinespositions_data;
-    static UWORD uwFrame = 0;
+    static UBYTE *ptr = NULL;
+    if (ptr==NULL) ptr = (UBYTE *)radiallinespositions_data;
+    //static UWORD uwFrame = 0;
     static UWORD uwCenterOffset = 0;
     static UWORD uwPattern = 0xFFFF;
 
@@ -204,18 +210,7 @@ void radialLinesGsLoop(void)
     static UBYTE i;
     for (i = 0; i < 40; i++)
     {
-        if (i==10)
-        { 
-            /*if (bCounter==0 )
-            {
-                //static const char* pTextPointer = &g_cPhrase[0];
-                static int iCharCounter = 0;
-                printCharToRight(g_cPhrase[iCharCounter++]);
-                if (g_cPhrase[iCharCounter]=='\n') iCharCounter = 0;
-                /*pTextPointer++;
-                if (*pTextPointer=='\n') pTextPointer=g_cPhrase;*/
-            /*}*/
-        }
+        
         UWORD uwX1 = (UWORD)(*ptr);
         UWORD uwY1 = (UWORD)(*(ptr + 1));
 
@@ -369,6 +364,7 @@ void radialLinesGsLoop(void)
 
 void radialLinesGsDestroy(void)
 {
+    unLoadRes();
     
     // Cleanup when leaving this gamestate
     systemUse();
@@ -438,78 +434,3 @@ static UWORD colorHSV(UBYTE ubH, UBYTE ubS, UBYTE ubV)
         return (ubV << 8) | (p << 4) | q;
     }
 }
-
-/*void printCharToRight(char carToPrint)
-{
-  int carToPrintOffset = ((int)carToPrint-0x20)*40;     // Prima tolgo 0x20 perché il primo carattere nel file di ramjam è uno spazio, poi moltiplico per 40 bytes perché i caratteri sono 2 bytes*20 righe
-  UBYTE* firstBitPlane = (UBYTE *)((ULONG)s_pMainBufferRadialLines->pBack->Planes[1]);
-  
-  // vogliamo stampare all'estrema destra quindi aggiungiamo 38
-  firstBitPlane += 38;
-  firstBitPlane += 40*TEXTYPOS;
-  
-  for (int i=0;i<20;i++)
-  {
-      *firstBitPlane = (UBYTE)fonts_data[carToPrintOffset];
-      firstBitPlane++;
-      *firstBitPlane = (UBYTE)fonts_data[carToPrintOffset+1];
-      firstBitPlane++;
-      carToPrintOffset+=2;
-      firstBitPlane+=38;
-  }
-}*/
-
-/*void scorri()
-{
-   /* MoveText
-	move.l #PIC+((20*(0+20))-1)*2,d0
-	btst #6,$dff002
-waitblitmovetext
-	btst #6,$dff002
-	bne.s waitblitmovetext
-	
-	move.l #$19f00002,$dff040 ; BLTCON0 and BLTCON1
-				  ; copy from chan A to chan D
-				  ; with 1 pixel left shift
-	
-	move.l #$ffff7fff,$dff044 ; delete leftmost pixel
-	
-	move.l d0,$dff050	  ; load source
-	move.l d0,$dff054	  ; load destination
-	
-	move.l #$00000000,$dff064 ; BTLAMOD and BTLDMOD will be zeroed
-				  ; because the blitter operation will take
-				  ; the whole screen width
-				  
-	move.w #(20*64)+20,$dff058 ; the rectangle we are blitting it is 20px
-				  ; high (like the font heght) and
-				  ; 20 bytes wide (the whole screen)
-	
-	rts*/
-	
-	/*blitWait();
-	//waitblit();
-	g_pCustom->bltcon0 = 0x19f0;
-	g_pCustom->bltcon1 = 0x0002;
-	
-	g_pCustom->bltafwm = 0xffff;
-	g_pCustom->bltalwm = 0x7fff;
-	
-	g_pCustom->bltamod = 0x0000;
-    g_pCustom->bltbmod = 0x0000;
-    g_pCustom->bltcmod = 0x0000;
-    g_pCustom->bltdmod = 0x0000;
-    
-    UBYTE* firstBitPlane = (UBYTE *)((ULONG)s_pMainBufferRadialLines->pFront->Planes[1])+((20*20-1)*2);
-    UBYTE* firstBitPlane2 = (UBYTE *)((ULONG)s_pMainBufferRadialLines->pBack->Planes[1])+((20*20-1)*2);
-
-    firstBitPlane += 40*TEXTYPOS;
-    firstBitPlane2 += 40*TEXTYPOS;
-    
-    g_pCustom->bltdpt = firstBitPlane2;
-    g_pCustom->bltapt = firstBitPlane;
-    
-    g_pCustom->bltsize = 0x0514;
-}*/
-
-

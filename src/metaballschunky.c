@@ -1,4 +1,4 @@
-#include "../include/metaballschunky.h"
+//#include "../include/metaballschunky.h"
 #include "../include/main.h"
 
 #include <ace/managers/key.h>                   // Keyboard processing
@@ -43,18 +43,19 @@ tView *g_tViewLateDestroy = NULL;
 
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue);
 
-BPTR file2;
+//BPTR file2;
 
 void metaballsGsCreate(void)
 {
-  systemSetDma(DMAB_SPRITE, 0);
-  pBuffer = AllocMem(192000, MEMF_CHIP);
+ /* pBuffer = AllocMem(192000, MEMF_CHIP);
   systemUseNoInts2();
   file2 = Open((CONST_STRPTR) "data/colors.bin", MODE_OLDFILE);
   Read(file2, pBuffer, 192000);
   Close(file2);
   systemUnuseNoInts2();
-  //gameExit();
+  //gameExit();*/
+
+  pBuffer = LoadRes(192000,"data/colors.bin");
 
   ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +
                      YRES + 1 +    // yres is 16 so we need 16 waits + 1 for checking the 255th line
@@ -208,6 +209,7 @@ Bitplane 4 -      0   0   0   0        0   0   0   0        0   0    0    0    0
 
   if (g_tViewLateDestroy)
     viewDestroy((tView *)g_tViewLateDestroy);
+
 }
 
 void metaballsGsLoop(void)
@@ -216,33 +218,7 @@ void metaballsGsLoop(void)
   g_pCustom->color[0] = 0x0FF0;
 #endif
 
-  static int copy = 2;
-  if (!copy)
-  {
-    /* systemUnuseNoInts2();
-        Execute("copy data/resistance_final.raw to ram:resistance_final.raw", 0, 0);
-        //Execute("list",0,0);
-       // SystemTagList("copy data/resistance_final.raw to ram:resistance_final.raw",0);
-        copy = 1;
-       systemUnuseNoInts2();
-       gameExit();
-  copy = 2;
-  return ;*/
-  }
-  else if (copy == 1)
-  {
-    BPTR file = 0;
-    systemUseNoInts();
-    file = Open((CONST_STRPTR) "data/colors.bin", MODE_OLDFILE);
-    if (!file)
-      gameExit();
-    Read(file, pBuffer, 192000);
-    Close(file);
-    //unlink("ram:colors.bin");
-    systemUnuseNoInts();
-    copy = 2;
-    return;
-  }
+  
 
   static UWORD uwFrameNo = 0;
   //static UBYTE *pColorPtr = &colors_data[0];
@@ -318,13 +294,14 @@ void metaballsGsLoop(void)
 void metaballsGsDestroy(void)
 {
 
-  FreeMem(pBuffer, 192000);
+  //FreeMem(pBuffer, 192000);
 
   // Cleanup when leaving this gamestate
   //systemUse();
 
   // This will also destroy all associated viewports and viewport managers
   viewDestroy(s_pView);
+  unLoadRes();
 }
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue)
 {
