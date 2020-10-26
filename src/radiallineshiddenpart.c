@@ -67,7 +67,8 @@ ULONG radiallinespositions_size;
 
 void radialLinesGsCreate(void)
 {
-    radiallinespositions_size = 103360;
+    radiallinespositions_size = 103360/2;
+    radiallinespositions_size = 192000/4;
     radiallinespositions_data = LoadRes(radiallinespositions_size,"data/radiallinesallpositions.bin");
 
     ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +

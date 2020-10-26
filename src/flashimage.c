@@ -101,7 +101,22 @@ void flashimageGsLoop(void)
   vPortWaitForEnd(s_pVpMain);
   if (ubLevel >= 16)
   {
+    /*if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();
+    unLoadRes();
+    if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();
+    unLoadRes();
+    if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();
+    unLoadRes();
+    if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();
+    unLoadRes();
+    if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();
+    unLoadRes();
+    if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();*/
+
+
     myChangeState(3);
+    return ;
+    
   }
   ulFrame++;
 }
@@ -112,8 +127,8 @@ void flashimageGsDestroy(void)
   //systemUse();
 
   // This will also destroy all associated viewports and viewport managers
-  //viewDestroy(s_pView);
-  g_tViewLateDestroy = (void *)s_pView;
+  viewDestroy(s_pView);
+  //g_tViewLateDestroy = (void *)s_pView;
 }
 
 UWORD paletteColorInc(UWORD uwFullColor, UBYTE ubLevel)

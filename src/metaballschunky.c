@@ -1,22 +1,45 @@
-//#include "../include/metaballschunky.h"
-#include "../include/main.h"
-
+#include "../include/metaballschunky.h"
 #include <ace/managers/key.h>                   // Keyboard processing
 #include <ace/managers/game.h>                  // For using gameExit
 #include <ace/managers/system.h>                // For systemUnuse and systemUse
 #include <ace/managers/viewport/simplebuffer.h> // Simple buffer
 #include <ace/managers/blit.h>
+#include <fixmath/fix16.h>
+#include "../include/main.h"
 
-#include <stdio.h>
-#include <proto/dos.h>
-#include <unistd.h>
 
-//#include "../include/colors.h"
+#define XMOVE
 
 #define BITPLANES 5
 
 #define XRES 20
 #define YRES 16
+
+#define XRESMIDDLE 10
+#define YRESMIDDLE 8
+
+#define MAXBALLS 2
+
+static UWORD XRESMAX = XRES * 16;
+static UWORD YRESMAX = YRES * 16;
+
+typedef struct tBall
+{
+  WORD uwX;
+  WORD uwY;
+
+  UWORD uwXincrementer;
+  UWORD uwYincrementer;
+
+  UWORD uwXframecounter;
+  UWORD uwXframe;
+
+  UWORD uwYframecounter;
+  UWORD uwYframe;
+
+} tBall;
+
+static tBall BALLS[MAXBALLS];
 
 //#define COLORDEBUG
 
@@ -32,31 +55,42 @@
   copSetMove(&pCmdListFront[ubCopIndex].sMove, var, var2); \
   ubCopIndex++;
 
+
 static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
 static UWORD s_uwCopRawOffs = 0;
 static tCopCmd *pCopCmds;
 static UWORD g_sWaitPositions[YRES];
-static UBYTE *pBuffer;
-tView *g_tViewLateDestroy = NULL;
 
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue);
+static UWORD colorHSV(UBYTE ubH, UBYTE ubS, UBYTE ubV);
 
-//BPTR file2;
+static UWORD COLORS[202] = {
+    0x0000, 0x0000, 0x0000,
+    0x0100, 0x0100, 0x0100,
+    0x0200, 0x0200, 0x0200,
+    0x0300, 0x0300, 0x0300,
+    0x0400, 0x0400, 0x0400,
+    0x0500, 0x0500, 0x0500,
+
+    0x0600, 0x0600, 0x0600,
+    0x0700, 0x0700, 0x0700,
+    0x0800, 0x0800, 0x0800,
+    0x0900, 0x0900, 0x0900,
+    0x0A00, 0x0A00, 0x0A00,
+    0x0B00, 0x0B00, 0x0B00,
+
+    0x0C00, 0x0C00, 0x0C00,
+    0x0D00, 0x0D00, 0x0D00,
+    0x0E00, 0x0E00, 0x0E00,
+    0x0F00, 0x0F00, 0x0F00,
+    0x0F00, 0x0F00, 0x0F00
+
+};
 
 void metaballsGsCreate(void)
 {
- /* pBuffer = AllocMem(192000, MEMF_CHIP);
-  systemUseNoInts2();
-  file2 = Open((CONST_STRPTR) "data/colors.bin", MODE_OLDFILE);
-  Read(file2, pBuffer, 192000);
-  Close(file2);
-  systemUnuseNoInts2();
-  //gameExit();*/
-
-  pBuffer = LoadRes(192000,"data/colors.bin");
-
   ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +
                      YRES + 1 +    // yres is 16 so we need 16 waits + 1 for checking the 255th line
                      XRES * YRES + //reserve space for 20 colors for each YRES
@@ -75,8 +109,8 @@ void metaballsGsCreate(void)
   s_pVpMain = vPortCreate(0,
                           TAG_VPORT_VIEW, s_pView,
                           TAG_VPORT_BPP, BITPLANES, // 4 bits per pixel, 16 colors
-                          // We won't specify height here - viewport will take remaining space.
                           TAG_END);
+
   s_pMainBuffer = simpleBufferCreate(0,
                                      TAG_SIMPLEBUFFER_VPORT, s_pVpMain, // Required: parent viewport
                                      TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
@@ -88,8 +122,6 @@ void metaballsGsCreate(void)
   tCopBfr *pCopBfr = s_pView->pCopList->pBackBfr;
   pCopCmds = &pCopBfr->pList[s_uwCopRawOffs];
 
-  // Since we've set up global CLUT, palette will be loaded from first viewport
-  // Colors are 0x0RGB, each channel accepts values from 0 to 15 (0 to F).
   s_pVpMain->pPalette[0] = 0x0000; // First color is also border color
   s_pVpMain->pPalette[1] = 0x0888; // Gray
   s_pVpMain->pPalette[2] = 0x0800; // Red - not max, a bit dark
@@ -97,25 +129,15 @@ void metaballsGsCreate(void)
   s_pVpMain->pPalette[4] = 0x00FF;
   s_pVpMain->pPalette[5] = 0x00FA;
   s_pVpMain->pPalette[6] = 0x00F1;
-
   s_pVpMain->pPalette[7] = 0x00F2;
-
   s_pVpMain->pPalette[8] = 0x00F3;
-
   s_pVpMain->pPalette[9] = 0x00F4;
-
   s_pVpMain->pPalette[10] = 0x00F5;
-
   s_pVpMain->pPalette[11] = 0x00F6;
-
   s_pVpMain->pPalette[12] = 0x00F7;
-
   s_pVpMain->pPalette[13] = 0x00F8;
-
   s_pVpMain->pPalette[14] = 0x00F9;
-
   s_pVpMain->pPalette[15] = 0x00AA;
-
   s_pVpMain->pPalette[16] = 0x0011;
   s_pVpMain->pPalette[17] = 0x0022;
   s_pVpMain->pPalette[18] = 0x0033;
@@ -123,7 +145,8 @@ void metaballsGsCreate(void)
   s_pVpMain->pPalette[20] = 0x0055;
   s_pVpMain->pPalette[21] = 0x0066;
 
-  systemSetDma(DMAB_SPRITE, 0);
+  // We don't need anything from OS anymore
+  //systemUnuse();
 
   /*
 ColUMN            0   1   2   3        4   5   6   7        8   9   10   11   12   13
@@ -189,26 +212,32 @@ Bitplane 4 -      0   0   0   0        0   0   0   0        0   0    0    0    0
     }
   }
 
-  //pBuffer = colors_data;
+  // Ball init
+  BALLS[0].uwX = XRESMIDDLE * 16;
+  BALLS[0].uwY = YRESMIDDLE * 16;
+  BALLS[0].uwXincrementer = 1;
+  BALLS[0].uwYincrementer = 1;
+  BALLS[0].uwXframecounter = 0; // X moves each 5 frames
+  BALLS[0].uwXframe = 0;
 
-  //pBuffer = AllocMem(192000, MEMF_CHIP);
+  BALLS[0].uwYframecounter = 1; // Y moves each 5 frames
+  BALLS[0].uwYframe = 1;
 
-  /*BPTR file = 0;
-  systemUseNoInts();
-  file = Open((CONST_STRPTR)"ram:colors.bin", MODE_OLDFILE);
-  if (!file)
-    gameExit();
-  Read(file, pBuffer, 192000);
-  Close(file);
-  unlink("ram:colors.bin");
-  systemUnuseNoInts();*/
+  BALLS[1].uwX = XRESMIDDLE * 16;
+  BALLS[1].uwY = YRESMIDDLE * 16;
+  BALLS[1].uwXincrementer = -1;
+  BALLS[1].uwYincrementer = -1;
+  BALLS[1].uwXframecounter = 0; // X moves each 5 frames
+  BALLS[1].uwXframe = 0;
 
-  //systemUnuse();
+  BALLS[1].uwYframecounter = 1; // Y moves each 5 frames
+  BALLS[1].uwYframe = 1;
+
+  for (int i = 0; i < 202; i++)
+    COLORS[i] = colorHSV((UBYTE)i * 4, 255, 255);
+
   // Load the view
   viewLoad(s_pView);
-
-  if (g_tViewLateDestroy)
-    viewDestroy((tView *)g_tViewLateDestroy);
 
 }
 
@@ -218,20 +247,13 @@ void metaballsGsLoop(void)
   g_pCustom->color[0] = 0x0FF0;
 #endif
 
-  
-
   static UWORD uwFrameNo = 0;
-  //static UBYTE *pColorPtr = &colors_data[0];
-  static UBYTE *pColorPtr = NULL;
-  if (pColorPtr == NULL)
-    pColorPtr = pBuffer;
 
   // This will loop forever until you "pop" or change gamestate
   // or close the game
   if (keyCheck(KEY_ESCAPE))
   {
     gameExit();
-    stateChange(g_pGameStateManager, g_pGameStates[4]);
   }
 
   if (keyUse(KEY_D))
@@ -248,41 +270,112 @@ void metaballsGsLoop(void)
     setPxColor(0, 0, 0x0F00);
   }
 
+  static UBYTE xZoom = 0;
+  if (keyUse(KEY_Q))
+    xZoom++;
+  if (keyUse(KEY_W))
+    xZoom--;
+
   //if (keyUse(KEY_X))
   if (1)
   {
+#ifdef XMOVE
+
+    // Move the balls
+    for (UBYTE ubBallCounter = 0; ubBallCounter < 2; ++ubBallCounter)
+    {
+
+      if (BALLS[ubBallCounter].uwXframecounter == 0)
+      {
+        BALLS[ubBallCounter].uwXframecounter = BALLS[ubBallCounter].uwXframe;
+        BALLS[ubBallCounter].uwX += BALLS[ubBallCounter].uwXincrementer;
+        if (BALLS[ubBallCounter].uwX <= 0 || BALLS[ubBallCounter].uwX >= XRESMAX)
+          BALLS[ubBallCounter].uwXincrementer *= -1;
+      }
+      else
+        BALLS[ubBallCounter].uwXframecounter--;
+
+      if (BALLS[ubBallCounter].uwYframecounter == 0)
+      {
+        BALLS[ubBallCounter].uwYframecounter = BALLS[ubBallCounter].uwYframe;
+        BALLS[ubBallCounter].uwY += BALLS[ubBallCounter].uwYincrementer;
+        if (BALLS[ubBallCounter].uwY <= 0 || BALLS[ubBallCounter].uwY >= YRESMAX)
+          BALLS[ubBallCounter].uwYincrementer *= -1;
+      }
+      else
+        BALLS[ubBallCounter].uwYframecounter--;
+    }
+#endif
+
     //Horizontal
 
     for (UBYTE ubHorizontalCounter = 0; ubHorizontalCounter < XRES; ubHorizontalCounter++)
     {
+
+      LONG wXdist = ubHorizontalCounter * 16 - BALLS[0].uwX;
+      LONG wXdist_2 = ubHorizontalCounter * 16 - BALLS[1].uwX;
+      if (wXdist < 0)
+        wXdist = wXdist * -1;
+      if (wXdist_2 < 0)
+        wXdist_2 = wXdist_2 * -1;
+#ifdef ACE_DEBUG
+      logWrite("X Distance for horizontal counter %u is %d\n", ubHorizontalCounter, wXdist);
+      logWrite("X Distance 2 for horizontal counter %u is %d\n", ubHorizontalCounter, wXdist_2);
+#endif
+
       // vertical
       for (UBYTE ubVerticalCounter = 0; ubVerticalCounter < YRES; ubVerticalCounter++)
       {
 
-        UWORD uwColor = (*pColorPtr << 8) | (*(pColorPtr + 1));
-        pColorPtr += 2;
-        setPxColor(ubHorizontalCounter, ubVerticalCounter, uwColor);
+
+        LONG wYdist = ubVerticalCounter * 16 - BALLS[0].uwY;
+        LONG wYdist_2 = ubVerticalCounter * 16 - BALLS[1].uwY;
+        if (wYdist < 0)
+          wYdist = wYdist * -1;
+        if (wYdist_2 < 0)
+          wYdist_2 = wYdist_2 * -1;
+#ifdef ACE_DEBUG
+        logWrite("Y Distance for horizontal counter %u is %d\n", ubVerticalCounter, wYdist);
+        logWrite("Y Distance 2 for horizontal counter %u is %d\n", ubVerticalCounter, wYdist_2);
+#endif
+
+        
+
+        LONG wDist = wXdist + wYdist;
+
+        LONG wDist_2 = wXdist_2 + wYdist_2;
+
+        LONG wDistTot = wDist + wDist_2;
+
+        wDistTot = wDistTot >> xZoom;
+
+        
+
+        UWORD uwColor;
+        UBYTE ubColorIndex = wDistTot >> 0;
+     
+        uwColor = COLORS[ubColorIndex];
+
+       ubColorIndex = wDistTot>>4;
+       
+       if (ubColorIndex<64) uwColor = COLORS[ubColorIndex];
+       else uwColor=0;
+
+      
+        if (wDist < 20 || wDist_2 < 20)
+          uwColor = COLORS[0];
+
+        setPxColor((UBYTE)ubHorizontalCounter, ubVerticalCounter, uwColor);
       }
     }
     uwFrameNo++;
-  }
-  if (uwFrameNo >= 300)
-  {
-    uwFrameNo = 0;
-    //pColorPtr = &colors_data[0];
-    pColorPtr = pBuffer;
-    //stateChange(g_pGameStateManager, g_pGameStates[4]);
-    static UBYTE ubCycles = 0;
-    if (ubCycles > 5)
+    if (uwFrameNo>=1300)
     {
       myChangeState(4);
+      return ;
     }
-    ubCycles++;
-    //gameExit();
-
-    return;
   }
-
+  
 #ifdef COLORDEBUG
   g_pCustom->color[0] = 0x0000;
 #endif
@@ -294,14 +387,8 @@ void metaballsGsLoop(void)
 void metaballsGsDestroy(void)
 {
 
-  //FreeMem(pBuffer, 192000);
-
-  // Cleanup when leaving this gamestate
-  //systemUse();
-
   // This will also destroy all associated viewports and viewport managers
   viewDestroy(s_pView);
-  unLoadRes();
 }
 void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue)
 {
@@ -314,4 +401,43 @@ void setPxColor(UBYTE ubX, UBYTE ubY, UWORD uwValue)
 #endif
 
   pCmdListBack[g_sWaitPositions[ubY] + ubX].sMove.bfValue = uwValue;
+}
+
+
+static UWORD colorHSV(UBYTE ubH, UBYTE ubS, UBYTE ubV)
+{
+  UBYTE ubRegion, ubRem, p, q, t;
+
+  if (ubS == 0)
+  {
+    ubV >>= 4; // 12-bit fit
+    return (ubV << 8) | (ubV << 4) | ubV;
+  }
+
+  ubRegion = ubH / 43;
+  ubRem = (ubH - (ubRegion * 43)) * 6;
+
+  p = (ubV * (255 - ubS)) >> 8;
+  q = (ubV * (255 - ((ubS * ubRem) >> 8))) >> 8;
+  t = (ubV * (255 - ((ubS * (255 - ubRem)) >> 8))) >> 8;
+
+  ubV >>= 4;
+  p >>= 4;
+  q >>= 4;
+  t >>= 4; // 12-bit fit
+  switch (ubRegion)
+  {
+  case 0:
+    return (ubV << 8) | (t << 4) | p;
+  case 1:
+    return (q << 8) | (ubV << 4) | p;
+  case 2:
+    return (p << 8) | (ubV << 4) | t;
+  case 3:
+    return (p << 8) | (q << 4) | ubV;
+  case 4:
+    return (t << 8) | (p << 4) | ubV;
+  default:
+    return (ubV << 8) | (p << 4) | q;
+  }
 }

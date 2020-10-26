@@ -690,8 +690,8 @@ void gameGsLoop(void)
 
     if (keyCheck(KEY_ESCAPE))
     {
-        gameExit();
-        return;
+        myChangeState(2);
+            return;
     }
 
     // Color effect

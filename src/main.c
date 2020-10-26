@@ -123,7 +123,9 @@ void genericDestroy(void)
 UBYTE* LoadRes(ULONG ulSize,char* pFile)
 {
   BPTR file2;
-  g_pBuffer = AllocMem(ulSize, MEMF_CHIP);
+  //g_pBuffer = AllocMem(ulSize, MEMF_CHIP);
+  g_pBuffer = memAlloc(ulSize, MEMF_CHIP);
+  if (g_pBuffer==NULL) return NULL;
   systemUseNoInts2();
   file2 = Open((CONST_STRPTR)pFile, MODE_OLDFILE);
   if (file2==0) gameExit();
@@ -136,6 +138,7 @@ UBYTE* LoadRes(ULONG ulSize,char* pFile)
 
 void unLoadRes()
 {
-  FreeMem(g_pBuffer,g_ulBufferLength);
+  //FreeMem(g_pBuffer,g_ulBufferLength);
+  memFree(g_pBuffer,g_ulBufferLength);
   g_ulBufferLength=0;
 }
