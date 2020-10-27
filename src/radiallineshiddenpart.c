@@ -69,7 +69,9 @@ void radialLinesGsCreate(void)
 {
     radiallinespositions_size = 103360/2;
     radiallinespositions_size = 192000/4;
-    radiallinespositions_data = LoadRes(radiallinespositions_size,"data/radiallinesallpositions.bin");
+    //radiallinespositions_data = LoadRes(radiallinespositions_size,"data/radiallinesallpositions.bin");*/
+    radiallinespositions_data = g_pBuffer;
+    
 
     ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +
                  32 * 3 + // 32 bars - each consists of WAIT + 2 MOVE instruction

@@ -10,6 +10,7 @@
 #include "../include/medioeval_gal_LORES_16.h"
 #include "../include/medioeval_gal_LORES_16_plt.h"
 
+#define IMGWAITTICKS 600
 #define BITPLANES 4
 #define SPEED 8
 
@@ -28,6 +29,7 @@ UWORD paletteColorInc(UWORD uwFullColor, UBYTE ubLevel);
 void copyToMainBpl(const unsigned char *, const UBYTE, const UBYTE);
 
 UWORD g_uwColors[] = {0x0AAA, 0x0444};
+static ULONG gs_ulStart;
 
 void flashimageGsCreate(void)
 {
@@ -68,6 +70,8 @@ void flashimageGsCreate(void)
 
   // Load the view
   viewLoad(s_pView);
+
+  gs_ulStart = timerGet();
 }
 
 void flashimageGsLoop(void)
@@ -113,10 +117,19 @@ void flashimageGsLoop(void)
     unLoadRes();
     if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();*/
 
+    static UBYTE ubResourceLoaded = 0;
+    if (ubResourceLoaded == 0)
+    {
+      ULONG radiallinespositions_size = 192000 / 4;
+      LoadRes(radiallinespositions_size, "data/radiallinesallpositions.bin");
+      ubResourceLoaded = 1;
+    }
 
-    myChangeState(3);
-    return ;
-    
+    if (timerGetDelta(gs_ulStart, timerGet()) > IMGWAITTICKS)
+    {
+      myChangeState(3);
+      return;
+    }
   }
   ulFrame++;
 }
