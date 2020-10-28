@@ -78,6 +78,8 @@ void flashimageGsLoop(void)
 {
   static ULONG ulFrame = 0;
   static UBYTE ubLevel = 0;
+  static BYTE bDimCounter2 = 15;
+  static UBYTE isExiting = 0;
 
   // This will loop forever until you "pop" or change gamestate
   // or close the game
@@ -87,7 +89,7 @@ void flashimageGsLoop(void)
     return;
   }
   //if (keyUse(KEY_Q))
-  if ((ulFrame % SPEED) == 0)
+  if (!isExiting && (ulFrame % SPEED) == 0)
   {
 
     UBYTE ubCount = 0;
@@ -127,8 +129,26 @@ void flashimageGsLoop(void)
 
     if (timerGetDelta(gs_ulStart, timerGet()) > IMGWAITTICKS)
     {
-      myChangeState(3);
-      return;
+      isExiting = 1;
+      if (bDimCounter2 >= 0)
+      {
+        p_uwPalette = (UWORD *)medioeval_gal_LORES_16_plt_data;
+        for (UBYTE ubCount = 0; ubCount < 16; ubCount++)
+        {
+          s_pVpMain->pPalette[ubCount] = paletteColorDim(*p_uwPalette, bDimCounter2);
+          p_uwPalette++;
+        }
+        
+        if ((ulFrame % 10) == 0)
+          bDimCounter2--;
+      }
+
+      if (bDimCounter2 < 0)
+      {
+        myChangeState(3);
+        return;
+      }
+      
     }
   }
   ulFrame++;
