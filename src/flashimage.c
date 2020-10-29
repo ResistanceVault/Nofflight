@@ -122,8 +122,9 @@ void flashimageGsLoop(void)
     static UBYTE ubResourceLoaded = 0;
     if (ubResourceLoaded == 0)
     {
-      ULONG radiallinespositions_size = 192000 / 4;
-      LoadRes(radiallinespositions_size, "data/radiallinesallpositions.bin");
+     // ULONG radiallinespositions_size = 192000 / 4;
+      //LoadRes(radiallinespositions_size, "data/radiallinesallpositions.bin");
+      LoadRes(38400, "data/mivampirademo.raw");
       ubResourceLoaded = 1;
     }
 

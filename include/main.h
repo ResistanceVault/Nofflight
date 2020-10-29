@@ -5,7 +5,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 
-#define GAME_STATE_COUNT 5
+#define GAME_STATE_COUNT 6
 
 extern tStateManager *g_pGameStateManager;
 extern tState *g_pGameStates[];

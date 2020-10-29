@@ -12,9 +12,6 @@
 #include "../_res/ball2bpl16x16_frame1.h"
 
 #include "globals.h"
-//#include "../include/Dirty_Tricks.h"
-/*#include <proto/exec.h>
-#include <proto/dos.h>*/
 
 #define BITPLANES 4 // 4 bitplanes
 
@@ -53,18 +50,6 @@ void printPerspectiveRow3(const UWORD, const UWORD, const UWORD);
 UBYTE buildPerspectiveCopperlist(UBYTE);
 
 void setHiddenRightBarColors(UWORD, UWORD, UWORD);
-// Music start
-/*long mt_init(const unsigned char *);
-void mt_music();
-void mt_end();*/
-
-//FN_HOTSPOT
-/*void INTERRUPT interruptHandlerMusic(REGARG(volatile tCustom *pCustom, "a0"), REGARG(volatile void *pData, "a1"))
-{
-    //mt_init(interruptHandlerMusic);
-    //mt_music();
-    //chan3played();
-}*/
 
 #define MAXCOLORS 12
 
@@ -353,17 +338,13 @@ v2d g_Gravity;
 #define LITTLE_BALLS_MASS 2
 
 tView *g_tViewLateDestroy;
-//BPTR file2;
 
+static UWORD uwChan2PlayedArray[15];
 static UWORD uwChan3PlayedArray[15];
-//static UWORD colorHSV2(UBYTE ubH, UBYTE ubS, UBYTE ubV);
+static UWORD uwChan4PlayedArray[15];
 
 void gameGsCreate(void)
 {
-    /*systemUseNoInts2();
-     file2 = Open("data/resistance_final.raw", MODE_OLDFILE);
-     Close(file2);
-    systemUnuseNoInts2();*/
     // ULONG ulRawSize = SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES)+16;
     ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES) + MAXBALLS * 2 + ACE_SPRITES_COPPERLIST_SIZE + 10 + MAXCOLORS * 4 + PERSPECTIVEBLOCKSIZE * (PERSPECTIVEBARSNUMBER + PERSPECTIVEBARSNUMBERBACK) + 1
                        /*                   3 * 3 + // 32 bars - each consists of WAIT + 3 MOVE instruction
@@ -397,24 +378,12 @@ void gameGsCreate(void)
 
     s_uwCopRawOffs = SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES);
 
-    /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
-    // We don't need anything from OS anymore
-    //systemUnuse();
-
-    // Start music
-    //mt_init(Dirty_Tricks_data);
-    /*systemSetInt(INTB_VERTB, 0, 0);
-    systemSetInt(INTB_COPER, interruptHandlerMusic, 0);*/
-    //systemUnuse();
 
     for (UBYTE ubBallIndex = 0; ubBallIndex < MAXBALLS; ubBallIndex++)
     {
         spriteVectorInit(&g_pBallsMovers[ubBallIndex], ubBallIndex, -16 - ubBallIndex * 9, 50 + ubBallIndex * 20, fix16_div(fix16_from_int((int)ubBallIndex + 4), fix16_from_int((int)ubBallIndex + 2)), 0, LITTLE_BALLS_MASS);
         copBlockEnableSpriteRaw(s_pView->pCopList, ubBallIndex, (UBYTE *)ball2bpl16x16_frame1_data, sizeof(ball2bpl16x16_frame1_data), s_uwCopRawOffs);
         moverMove(g_pBallsMovers[ubBallIndex]);
-        /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
     }
 
     s_uwCopRawOffs += ACE_SPRITES_COPPERLIST_SIZE;
@@ -509,8 +478,6 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
             uwRowCounter++;
         }
         ubContBitplanes++;
-        /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
     }
 #endif
 
@@ -525,8 +492,7 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
         if ((uwCounter % PERSECTIVEBARHEIGHT) == 0)
             uwRowWidth += 3;
     }
-    /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
+
     uwRowWidth -= 3;
     for (UWORD uwCounter = 244; uwCounter < 244 + PERSPECTIVEBARSNUMBERBACK * PERSECTIVEBARHEIGHT; uwCounter++)
     {
@@ -534,8 +500,6 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
         if ((uwCounter % PERSECTIVEBARHEIGHT) == 0)
             uwRowWidth -= 3;
     }
-    /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
 
     tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
     tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
@@ -573,13 +537,7 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     copSetMoveBackAndFront(&g_pCustom->color[31], 0x0b77);
     // Sprites colors end
 
-    /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
-
     ubCopIndex = buildPerspectiveCopperlist(ubCopIndex);
-
-    /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
 
     copSetWaitBackAndFront(7, 43);
     copSetMoveBackAndFront(&g_pCustom->color[0], 0x0000);
@@ -608,8 +566,24 @@ blitRect(s_pMainBuffer->pBack, 4*32, 211, 26, 3,1+4);*/
     uwChan3PlayedArray[1] = 0x0CE7;
     uwChan3PlayedArray[0] = 0x0CF7;
 
-    /*vPortWaitForEnd(s_pVpMain);
-    mt_music();*/
+    
+    uwChan4PlayedArray[6] = 0x0AE8;
+    uwChan4PlayedArray[5] = 0x0BE9;
+    uwChan4PlayedArray[4] = 0x0CEA;
+    uwChan4PlayedArray[3] = 0x0DEB;
+    uwChan4PlayedArray[2] = 0x0EFC;
+    uwChan4PlayedArray[1] = 0x0FFD;
+    uwChan4PlayedArray[0] = 0x0FFF;
+
+    uwChan2PlayedArray[6] = 0x08BC;
+    uwChan2PlayedArray[5] = 0x07AB;
+    uwChan2PlayedArray[4] = 0x069B;
+    uwChan2PlayedArray[3] = 0x048A;
+    uwChan2PlayedArray[2] = 0x037A;
+    uwChan2PlayedArray[1] = 0x0269;
+    uwChan2PlayedArray[0] = 0x0069;
+
+
     //systemUnuse();
 
     // Load the view
@@ -623,19 +597,7 @@ void gameGsLoop(void)
     if (ulFrameNo >= 300 && bIsExiting == 0)
     {
         static BYTE bChan3Index = 0;
-        /* static UWORD uwChan3PlayedArray[11] = {
-            0x0F00,
-            0x0E00,
-            0x0D00,
-            0x0C00,
-            0x0B00,
-            0x0A00,
-            0x0900,
-            0x0800,
-            0x0700,
-            0x0600,
-            0x0500,
-        };*/
+        static BYTE bChan4Index = 0;
 
         if (g_iChan4Played)
             bChan3Index = 0;
@@ -649,10 +611,30 @@ void gameGsLoop(void)
         s_pBarColors[4] = uwChan3PlayedArray[bChan3Index];
         s_pBarColors[8] = uwChan3PlayedArray[bChan3Index];
 
+        /*s_pBarColors[1] = uwChan3PlayedArray[bChan3Index];
+        s_pBarColors[5] = uwChan3PlayedArray[bChan3Index];
+        s_pBarColors[9] = uwChan3PlayedArray[bChan3Index];*/
+
         /*if (g_iChan4Played)
             s_pBarColors[1] = 0x0888;
         else
             s_pBarColors[1] = s_pBarColors2[1];*/
+
+        if (g_iChan4Played)
+            bChan4Index = 0;
+        else
+        {
+            bChan4Index++;
+            if (bChan4Index > 6)
+                bChan4Index = 6;
+        }
+        s_pBarColors[1] = uwChan4PlayedArray[bChan4Index];
+        s_pBarColors[5] = uwChan4PlayedArray[bChan4Index];
+        s_pBarColors[9] = uwChan4PlayedArray[bChan4Index];
+
+        s_pBarColors[2] = uwChan2PlayedArray[bChan4Index];
+        s_pBarColors[6] = uwChan2PlayedArray[bChan4Index];
+        s_pBarColors[10] = uwChan2PlayedArray[bChan4Index];
     }
 #ifdef COLORDEBUG
     g_pCustom->color[0] = 0x0FF0;
