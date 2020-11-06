@@ -8,6 +8,7 @@
 #include "../include/resistancelogo.h"
 #include "../include/mivampiralogo.h"
 #include "../include/metaballschunky.h"
+#include "../include/goatblocks.h"
 #include "slidingtext.h"
 #include "flashimage.h"
 
@@ -95,6 +96,8 @@ void genericCreate(void)
   g_pGameStates[3] = stateCreate(metaballsGsCreate, metaballsGsLoop, metaballsGsDestroy, 0, 0, 0);
   g_pGameStates[4] = stateCreate(mivampiraLogoGsCreate, mivampiraLogoGsLoop, mivampiraLogoGsDestroy, 0, 0, 0);
   g_pGameStates[5] = stateCreate(radialLinesGsCreate, radialLinesGsLoop, radialLinesGsDestroy, 0, 0, 0);
+  g_pGameStates[6] = stateCreate(goatblocksGsCreate, goatblocksGsLoop, goatblocksGsDestroy, 0, 0, 0);
+
   stateChange(g_pGameStateManager, g_pGameStates[0]);
   //stateChange(g_pGameStateManager, g_pGameStates[3]);
   systemSetInt(INTB_VERTB, interruptHandlerMusic2, 0);
@@ -118,6 +121,7 @@ void genericDestroy(void)
   stateDestroy(g_pGameStates[3]);
   stateDestroy(g_pGameStates[4]);
   stateDestroy(g_pGameStates[5]);
+  stateDestroy(g_pGameStates[6]);
 
   keyDestroy(); // We don't need it anymore
   logWrite("Goodbye, Amiga!\n");

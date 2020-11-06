@@ -179,8 +179,8 @@ void mivampiraLogoGsLoop(void)
 	if (bDimCounter2 < 0)
 	{
 		myChangeState(5);
-		ULONG radiallinespositions_size = 192000 / 4;
-		LoadRes(radiallinespositions_size, "data/radiallinesallpositions.bin");
+		/*ULONG radiallinespositions_size = 192000 / 4;
+		LoadRes(radiallinespositions_size, "data/radiallinesallpositions.bin");*/
 		return;
 	}
 	if (copy >= 3)
@@ -191,8 +191,11 @@ void mivampiraLogoGsLoop(void)
 
 void mivampiraLogoGsDestroy(void)
 {
-	unLoadRes();
+	//unLoadRes();
 
 	// This will also destroy all associated viewports and viewport managers
 	viewDestroy(s_pView);
+unLoadRes();
+	ULONG radiallinespositions_size = 192000 / 4;
+		LoadRes(radiallinespositions_size, "data/radiallinesallpositions.bin");
 }
