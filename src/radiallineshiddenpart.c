@@ -20,7 +20,7 @@ Boston, MA 02111-1307, USA.
 #include <ace/managers/system.h>                // For systemUnuse and systemUse
 #include <ace/managers/viewport/simplebuffer.h> // Simple buffer
 #include <ace/managers/blit.h>
-#include <ace/utils/font.h> // needed for tFont and font stuff
+//#include <ace/utils/font.h> // needed for tFont and font stuff
 #include <ace/managers/joy.h>
 
 #include "vectors.h"
@@ -50,8 +50,8 @@ void scorri();
 static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBufferRadialLines;
-static tFont *s_pFontUI;
-static tTextBitMap *s_pGlyph;
+/*static tFont *s_pFontUI;
+static tTextBitMap *s_pGlyph;*/
 static UBYTE s_ubBarHue = 0;
 static UWORD s_uwBarY = 44;
 static UWORD s_uwCopRawOffs = 0;
@@ -379,8 +379,8 @@ void radialLinesGsDestroy(void)
     // Cleanup when leaving this gamestate
     //systemUse();
 
-    fontDestroyTextBitMap(s_pGlyph);
-    fontDestroy(s_pFontUI);
+    /*fontDestroyTextBitMap(s_pGlyph);
+    fontDestroy(s_pFontUI);*/
 
     // This will also destroy all associated viewports and viewport managers
     viewDestroy(s_pView);
