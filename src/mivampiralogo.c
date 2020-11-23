@@ -7,6 +7,7 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/key.h> // Keyboard processing
 #include "../include/mivampirademocolors.h"
+#include "../include/mivampira_zoomoutplt.h"
 #include "../include/main.h"
 #include "vectors.h"
 
@@ -34,6 +35,7 @@ static TCurtain s_pCurtains[MAXCOURTAINS];
 
 #define DELAYTIME 30
 #define GRAVITY 900
+#define ANIMATIONWAIT 100
 
 static tVPort *s_pVpMain; // Viewport for playfield
 static tSimpleBufferManager *s_pMainBuffer;
@@ -50,6 +52,13 @@ static v2d g_Gravity;
 void createMask();
 void blitBlack(UWORD);
 static UBYTE reverse(UBYTE);
+static void clearHr(UWORD);
+static void clearBpl();
+static void copyToMainBplZoom();
+
+static UBYTE *imgPointer;
+static UBYTE *imgPointerStart;
+static UWORD *pltPointer;
 
 inline static void courtain_init(UBYTE ubIndex, UBYTE ubAlloc, UBYTE ubOffset, UBYTE ubSkipFramesCounter)
 {
@@ -98,7 +107,7 @@ void mivampiraLogoGsCreate(void)
 	}
 
 	for (UBYTE ubCount = 16; ubCount < 32; ubCount++)
-		s_pVpMain->pPalette[ubCount] = 0x0000;
+		s_pVpMain->pPalette[ubCount] = 0x0001;
 
 	// Create mask list
 	createMask();
@@ -157,6 +166,13 @@ void mivampiraLogoGsLoop(void)
 		memcpy(lol, pBuffer + 9600 * 3, 9600);
 
 		copy = 3;
+
+		unLoadRes();
+		LoadRes(51200, "data/mivampira_zoomout.raw");
+
+		pltPointer = (UWORD *)mivampira_zoomoutplt_data;
+		imgPointer = (UBYTE *)g_pBuffer;
+		imgPointerStart = imgPointer;
 	}
 	else if (copy == 3)
 	{
@@ -273,10 +289,9 @@ void mivampiraLogoGsLoop(void)
 
 	if (iFrameNo > 300)
 	{
+#ifdef DISSOLVENZA
 		if (bDimCounter2 >= 0)
 		{
-
-		
 
 			UBYTE ubCount = 0;
 			UWORD *p_uwPalette = (UWORD *)mivampirademocolors_data;
@@ -292,14 +307,70 @@ void mivampiraLogoGsLoop(void)
 				bDimCounter2--;
 		}
 
-		//gameExit();return ;
+//gameExit();return ;
+#else
+		static ULONG x = 0;
+		static ULONG y = 0;
+		static UBYTE ubFinish = 0;
+		static UBYTE ubRotoZoom = 0;
+		static UWORD uwAniWait = ANIMATIONWAIT;
+
+		if (ubFinish && uwAniWait)
+			uwAniWait--;
+
+		else if (ubFinish)
+		{
+			if (imgPointer == imgPointerStart)
+				clearBpl();
+
+			if (imgPointer - imgPointerStart > 51200 - 2048)
+			{
+				myChangeState(5);
+				return;
+			}
+
+			copyToMainBplZoom(imgPointer);
+			for (UBYTE ubCount = 0; ubCount < 16; ubCount++)
+			{
+				if (ubCount > 0)
+				{
+					UWORD newColor = *pltPointer;
+					if (*pltPointer == 0x0666)
+					{
+						s_pVpMain->pPalette[ubCount] = 0x0001;
+					}
+					else
+					{
+						s_pVpMain->pPalette[ubCount] = newColor;
+					}
+				}
+				pltPointer++;
+			}
+		}
+
+		if (x < 320 / 2 - 32)
+		{
+			blitLine(s_pMainBuffer->pBack, x, 0, x, 255, 0, 0xFFFF, 31);
+			blitLine(s_pMainBuffer->pBack, 319 - x, 0, 319 - x, 255, 0, 0xFFFF, 31);
+			x++;
+		}
+		else
+			ubFinish = 1;
+
+		if (y < 256 / 2 - 16)
+		{
+			clearHr(255 - y);
+			clearHr(y);
+			y++;
+		}
+#endif
 	}
-	if (bDimCounter2 < 0)
+	/*if (bDimCounter2 < 0)
 	{
 		myChangeState(5);
-	
+
 		return;
-	}
+	}*/
 
 	viewUpdateCLUT(s_pView);
 	vPortWaitForEnd(s_pVpMain);
@@ -511,4 +582,54 @@ void createMask()
 	*(s_pMask + 192) = 0xFF;
 	*(s_pMask + 193) = 0xFF;
 	*(s_pMask + 194) = 0xFF;
+}
+
+static void clearHr(UWORD uwRow)
+{
+	ULONG *pRow = (ULONG *)((ULONG)s_pMainBuffer->pBack->Planes[4] + 40 * uwRow);
+	for (UBYTE ubCount = 0; ubCount < 10; ubCount++)
+	{
+		*pRow = 0xFFFFFFFF;
+		pRow++;
+	}
+	return;
+}
+
+static void clearBpl()
+{
+	UBYTE ubBitplaneCounter;
+	for (ubBitplaneCounter = 0; ubBitplaneCounter < 5; ubBitplaneCounter++)
+	{
+		blitWait();
+		g_pCustom->bltcon0 = 0x0100;
+		g_pCustom->bltcon1 = 0x0000;
+		g_pCustom->bltafwm = 0xFFFF;
+		g_pCustom->bltalwm = 0xFFFF;
+		g_pCustom->bltdmod = 32;
+		g_pCustom->bltdpt = (UBYTE *)((ULONG)s_pMainBuffer->pBack->Planes[ubBitplaneCounter] + 16);
+		g_pCustom->bltsize = 0x4004;
+	}
+	return;
+}
+
+static void copyToMainBplZoom()
+{
+	UBYTE ubBitplaneCounter;
+	for (ubBitplaneCounter = 0; ubBitplaneCounter < 4; ubBitplaneCounter++)
+	{
+		blitWait();
+		g_pCustom->bltcon0 = 0x09F0;
+		g_pCustom->bltcon1 = 0x0000;
+		g_pCustom->bltafwm = 0xFFFF;
+		g_pCustom->bltalwm = 0xFFFF;
+		g_pCustom->bltamod = 0x0000;
+		//g_pCustom->bltbmod = 0x0000;
+		//g_pCustom->bltcmod = 0x0000;
+		g_pCustom->bltdmod = 32;
+		g_pCustom->bltapt = (UBYTE *)((ULONG)imgPointer);
+		g_pCustom->bltdpt = (UBYTE *)((ULONG)s_pMainBuffer->pBack->Planes[ubBitplaneCounter] + 16 + 40 * 96);
+		g_pCustom->bltsize = 0x1004;
+		imgPointer += 512;
+	}
+	return;
 }
