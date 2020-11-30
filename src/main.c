@@ -13,7 +13,8 @@
 #include "flashimage.h"
 
 #include "radiallineshiddenpart.h"
-#include "../include/Dirty_Tricks.h"
+#include "../include/findaway.h"
+//#include "../include/Dirty_Tricks.h"
 //#include "player610.6.no_cia.bin.h"
 //#include "testmod.p61.h"
 
@@ -83,7 +84,7 @@ void genericCreate(void)
   LoadRes(51200,"data/resistance_final.raw");
 
   // Init music
-  mt_init(Dirty_Tricks_data);
+  mt_init(findaway_data);
   //p61Init(testmod_data);
 
   // Here goes your startup code
