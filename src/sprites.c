@@ -5,7 +5,7 @@ FUBYTE copRawDisableSprites2(tCopList *pList, FUBYTE fubSpriteMask, FUWORD fuwCm
 
 tCopBlock *copBlockEnableSpriteFull(tCopList *pList, FUBYTE fubSpriteIndex, UBYTE *pSpriteData, ULONG ulSpriteSize)
 {
-  static tCopBlock *pBlockSprites=NULL;
+  static tCopBlock *pBlockSprites = NULL;
   tCopMoveCmd *pMoveCmd = NULL;
 
   if (pBlockSprites == NULL)
@@ -261,7 +261,6 @@ void copBlockEnableSpriteRaw(tCopList *pList, FUBYTE fubSpriteIndex, UBYTE *pSpr
 
   copSetMove(pCmd2++, &g_pSprFetch[fubSpriteIndex].uwHi, ulAddr >> 16);
   copSetMove(pCmd2, &g_pSprFetch[fubSpriteIndex].uwLo, ulAddr & 0xFFFF);
-
 }
 
 void spriteMove3(FUBYTE fubSpriteIndex, WORD x, WORD y)
@@ -384,5 +383,18 @@ void copBlockSpritesFree()
   {
     if (s_pAceSprites[ubIterator].pSpriteData)
       FreeMem(s_pAceSprites[ubIterator].pSpriteData, s_pAceSprites[ubIterator].ulSpriteSize);
+  }
+}
+
+void disableSpritesAll()
+{
+  systemSetDma(DMAB_SPRITE, 0);
+
+  // Sprite reset
+  UWORD *p_Sprites = (UWORD *)0xdff140;
+  while (p_Sprites <= (UWORD *)0xdff17E)
+  {
+    *p_Sprites = 0;
+    p_Sprites += 2;
   }
 }

@@ -5,7 +5,7 @@
 
 #include "../include/main.h"
 #include "../include/flash2021.h"
-#include "../include/resistancelogo.h"
+#include "../include/demointro.h"
 #include "../include/mivampiralogo.h"
 #include "../include/metaballschunky.h"
 #include "../include/goatblocks.h"
@@ -26,7 +26,6 @@ void mt_music();
 void mt_end();
 int chan3played();
 int chan4played();
-
 
 /*int p61Init(const void* module) { // returns 0 if success, non-zero otherwise
 	register volatile const void* _a0 __asm("a0") = module;
@@ -60,13 +59,14 @@ static void INTERRUPT interruptHandlerMusic2()
 {
   if ((g_pCustom->intreqr >> 5) & 1U)
   {
-    g_pCustom->intreq=(1<<INTB_VERTB); g_pCustom->intreq=(1<<INTB_VERTB);
+    g_pCustom->intreq = (1 << INTB_VERTB);
+    g_pCustom->intreq = (1 << INTB_VERTB);
     //p61Music();
     mt_music();
     g_iChan3Played = chan3played();
     g_iChan4Played = chan4played();
   }
-    //chan3played();
+  //chan3played();
 }
 
 void genericCreate(void)
@@ -81,7 +81,8 @@ void genericCreate(void)
   Close(file);
   systemUnuseNoInts2();*/
 
-  LoadRes(51200,"data/resistance_final.raw");
+  //LoadRes(51200,"data/resistance_final.raw");
+  LoadRes(26880, "data/VampireItalialogo.raw");
 
   // Init music
   mt_init(findaway_data);
@@ -91,7 +92,7 @@ void genericCreate(void)
   logWrite("Hello, Amiga!\n");
   keyCreate(); // We'll use keyboard
   g_pGameStateManager = stateManagerCreate();
-  g_pGameStates[0] = stateCreate(resistanceLogoGsCreate, resistanceLogoGsLoop, resistanceLogoGsDestroy, 0, 0, 0);
+  g_pGameStates[0] = stateCreate(introGsCreate, introGsLoop, introGsDestroy, 0, 0, 0);
   g_pGameStates[1] = stateCreate(gameGsCreate, gameGsLoop, gameGsDestroy, 0, 0, 0);
   g_pGameStates[2] = stateCreate(flashimageGsCreate, flashimageGsLoop, flashimageGsDestroy, 0, 0, 0);
   g_pGameStates[3] = stateCreate(metaballsGsCreate, metaballsGsLoop, metaballsGsDestroy, 0, 0, 0);
@@ -100,7 +101,6 @@ void genericCreate(void)
   g_pGameStates[6] = stateCreate(goatblocksGsCreate, goatblocksGsLoop, goatblocksGsDestroy, 0, 0, 0);
 
   stateChange(g_pGameStateManager, g_pGameStates[0]);
-  //stateChange(g_pGameStateManager, g_pGameStates[3]);
   systemSetInt(INTB_VERTB, interruptHandlerMusic2, 0);
 }
 
@@ -128,15 +128,17 @@ void genericDestroy(void)
   logWrite("Goodbye, Amiga!\n");
 }
 
-UBYTE* LoadRes(ULONG ulSize,char* pFile)
+UBYTE *LoadRes(ULONG ulSize, char *pFile)
 {
   BPTR file2;
   //g_pBuffer = AllocMem(ulSize, MEMF_CHIP);
   g_pBuffer = memAlloc(ulSize, MEMF_CHIP);
-  if (g_pBuffer==NULL) return NULL;
+  if (g_pBuffer == NULL)
+    return NULL;
   systemUseNoInts2();
   file2 = Open((CONST_STRPTR)pFile, MODE_OLDFILE);
-  if (file2==0) gameExit();
+  if (file2 == 0)
+    gameExit();
   Read(file2, g_pBuffer, ulSize);
   Close(file2);
   systemUnuseNoInts2();
@@ -147,6 +149,6 @@ UBYTE* LoadRes(ULONG ulSize,char* pFile)
 void unLoadRes()
 {
   //FreeMem(g_pBuffer,g_ulBufferLength);
-  memFree(g_pBuffer,g_ulBufferLength);
-  g_ulBufferLength=0;
+  memFree(g_pBuffer, g_ulBufferLength);
+  g_ulBufferLength = 0;
 }

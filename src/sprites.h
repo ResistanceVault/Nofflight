@@ -31,5 +31,5 @@ void copBlockEnableSpriteRaw(tCopList *, FUBYTE , UBYTE *, ULONG , FUWORD );
 void memBitmapToSprite(UBYTE* , const size_t );
 void copBlockSpritesFree();
 void spriteMove3(FUBYTE,WORD,WORD);
-
+void disableSpritesAll();
 #endif

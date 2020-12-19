@@ -25,6 +25,7 @@ Boston, MA 02111-1307, USA.
 
 #include "vectors.h"
 #include "physics.h"
+#include "sprites.h"
 #include "../include/main.h"
 
 //#include "../_res/radiallinespositions.h"
@@ -145,7 +146,9 @@ void radialLinesGsCreate(void)
     viewProcessManagers(s_pView);
     copProcessBlocks();
 
-    systemSetDma(DMAB_SPRITE, 0);
+    disableSpritesAll();
+
+    /*systemSetDma(DMAB_SPRITE, 0);
 
     // Sprite reset
     UWORD *p_Sprites = (UWORD *)0xdff140;
@@ -153,7 +156,7 @@ void radialLinesGsCreate(void)
     {
         *p_Sprites = 0;
         p_Sprites += 2;
-    }
+    }*/
 
     // Init mover
     g_Gravity.x = fix16_div(fix16_from_int(1), fix16_from_int(50));

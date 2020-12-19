@@ -15,7 +15,7 @@
 #define TIMESTEP 350
 #define TIMESTEPSHORT 100
 
-inline void myCopSetMove(tCopMoveCmd *pMoveCmd, UWORD uwValue)
+static inline void myCopSetMove(tCopMoveCmd *pMoveCmd, UWORD uwValue)
 {
   pMoveCmd->bfUnused = 0;
   pMoveCmd->bfValue = uwValue;
@@ -85,6 +85,7 @@ void drawBlock2(tBlock);
 void deleteBlock(tBlock);
 void initTimer();
 void updateRow(UBYTE, UBYTE);
+void scrollDown();
 #if 0
 void copyBplShifted(UWORD *, UWORD *);
 #endif
@@ -119,7 +120,7 @@ static char *g_pTxt[] = {
     "",
     "The radial circle was inspired from the",
     "Revision 2020 winner demo Chillonbits",
-    "by Offence, one of my favourite demos ",
+    "by Offence, one of my favourites ",
     "of all time",
     "",
     "This demo is a little tribute",
@@ -132,7 +133,7 @@ static char *g_pTxt[] = {
     "",
     "As always the demo is free and open source, ",
     "anyone can take, change it",
-    "and use for a base for ",
+    "and use as a base for ",
     "a new demo.",
     "Sources will be published on my github",
     "after the first release of this demo"
@@ -146,7 +147,7 @@ static char *g_pTxt[] = {
     "- mAZE for his incredible chipmusic",
     "- All the Resistance demogroup ",
     "for answering all my technical",
-    " questions (SnC,4Play)",
+    " questions (SnC,4Play,astrofra)",
     "- All the people who helped building ",
     "Goatlight and Chillobits",
     "",
@@ -156,11 +157,6 @@ static char *g_pTxt[] = {
     "Press esc to return to OS",
     "---------------------------",
     0};
-#if 0
-static ULONG g_ulTxtSize = 0;
-#endif
-/*static tBitMap *g_pPlane1;
-static tBitMap *g_pPlane2;*/
 
 #define INSERTTIMERBLOCK1(time, var0)            \
   TIMER[uwTimerIndex].bCubeIndexArray[0] = var0; \
@@ -188,34 +184,34 @@ static tBitMap *g_pPlane2;*/
   TIMER[uwTimerIndex].bCubeIndexArray[4] = -1;          \
   TIMER[uwTimerIndex++].ulTimeDelta = time;
 
-#define INSERTTIMERBLOCK5(time,var0, var1, var2, var3, var4) \
-  TIMER[uwTimerIndex].bCubeIndexArray[0] = var0;        \
-  TIMER[uwTimerIndex].bCubeIndexArray[1] = var1;        \
-  TIMER[uwTimerIndex].bCubeIndexArray[2] = var2;        \
-  TIMER[uwTimerIndex].bCubeIndexArray[3] = var3;        \
-  TIMER[uwTimerIndex].bCubeIndexArray[4] = var4;        \
-  TIMER[uwTimerIndex].bCubeIndexArray[5] = -1;          \
-  TIMER[uwTimerIndex++].ulTimeDelta = time;
-
-#define INSERTTIMERBLOCK6(time,var0, var1, var2, var3, var4, var5) \
+#define INSERTTIMERBLOCK5(time, var0, var1, var2, var3, var4) \
   TIMER[uwTimerIndex].bCubeIndexArray[0] = var0;              \
   TIMER[uwTimerIndex].bCubeIndexArray[1] = var1;              \
   TIMER[uwTimerIndex].bCubeIndexArray[2] = var2;              \
   TIMER[uwTimerIndex].bCubeIndexArray[3] = var3;              \
   TIMER[uwTimerIndex].bCubeIndexArray[4] = var4;              \
-  TIMER[uwTimerIndex].bCubeIndexArray[5] = var5;              \
-  TIMER[uwTimerIndex].bCubeIndexArray[6] = -1;                \
+  TIMER[uwTimerIndex].bCubeIndexArray[5] = -1;                \
   TIMER[uwTimerIndex++].ulTimeDelta = time;
 
-#define INSERTTIMERBLOCK7(time,var0, var1, var2, var3, var4, var5, var6) \
+#define INSERTTIMERBLOCK6(time, var0, var1, var2, var3, var4, var5) \
   TIMER[uwTimerIndex].bCubeIndexArray[0] = var0;                    \
   TIMER[uwTimerIndex].bCubeIndexArray[1] = var1;                    \
   TIMER[uwTimerIndex].bCubeIndexArray[2] = var2;                    \
   TIMER[uwTimerIndex].bCubeIndexArray[3] = var3;                    \
   TIMER[uwTimerIndex].bCubeIndexArray[4] = var4;                    \
   TIMER[uwTimerIndex].bCubeIndexArray[5] = var5;                    \
-  TIMER[uwTimerIndex].bCubeIndexArray[6] = var6;                    \
-  TIMER[uwTimerIndex].bCubeIndexArray[7] = -1;                      \
+  TIMER[uwTimerIndex].bCubeIndexArray[6] = -1;                      \
+  TIMER[uwTimerIndex++].ulTimeDelta = time;
+
+#define INSERTTIMERBLOCK7(time, var0, var1, var2, var3, var4, var5, var6) \
+  TIMER[uwTimerIndex].bCubeIndexArray[0] = var0;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[1] = var1;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[2] = var2;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[3] = var3;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[4] = var4;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[5] = var5;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[6] = var6;                          \
+  TIMER[uwTimerIndex].bCubeIndexArray[7] = -1;                            \
   TIMER[uwTimerIndex++].ulTimeDelta = time;
 
 #define INSERTTIMERBLOCK8(time, var0, var1, var2, var3, var4, var5, var6, var7) \
@@ -243,15 +239,14 @@ static tBitMap *g_pPlane2;*/
   TIMER[uwTimerIndex].bCubeIndexArray[9] = -1;                                        \
   TIMER[uwTimerIndex++].ulTimeDelta = time;
 
-
-UBYTE* pBuffer;
+UBYTE *pBuffer;
 
 void goatblocksGsCreate(void)
 {
-  ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) +
+  ULONG ulRawSize = (simpleBufferGetRawCopperlistInstructionCount(BITPLANES) + 2 +
                      70 * 1 + // 32 bars - each consists of WAIT + 2 MOVE instruction
                      1 +      // Final WAIT
-                     1 - 21       // Just to be sure
+                     1 - 21   // Just to be sure
   );
 
   // Create a view - first arg is always zero, then it's option-value
@@ -406,7 +401,7 @@ void goatblocksGsCreate(void)
   logWrite("Nuova bitmap : %p\n", g_pBitmapHelper);
 #endif
 #endif
-//memFree(s_pMainBuffer->pBack->Planes[4],256*40);
+  //memFree(s_pMainBuffer->pBack->Planes[4],256*40);
   /*pBuffer = memAlloc(40*256*5, MEMF_CHIP);
   memset(pBuffer,0,40*256*5);
   memset(pBuffer+256*4,0xFF,1);
@@ -452,7 +447,10 @@ void goatblocksGsCreate(void)
   ulStart = timerGet();
   ulTimerDelta = TIMER[0].ulTimeDelta;
 
-  
+  copSetWaitBackAndFront(0, 255 , 0);
+  copSetMoveBackAndFront(&g_pCustom->intreq, 0x8010);
+
+  systemSetInt(INTB_COPER, scrollDown, 0);
 }
 
 void goatblocksGsLoop(void)
@@ -539,7 +537,7 @@ void goatblocksGsLoop(void)
 #else
   if ((ulFrame % 4) == 0)
   {
-    static ULONG ulPlaneAddr = 0;
+    /*static ULONG ulPlaneAddr = 0;
     static ULONG ulEndPlaneAddr = 0;
     if (ulPlaneAddr == 0)
     {
@@ -549,7 +547,6 @@ void goatblocksGsLoop(void)
       //ulPlaneAddr = (ULONG)pBuffer;
 
       ulEndPlaneAddr = ulPlaneAddr + 256 * 40 * 4;
-
     }
     ulPlaneAddr += 40;
     tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
@@ -559,11 +556,12 @@ void goatblocksGsLoop(void)
     copSetMove(&pCmdList[14 + 1].sMove, &g_pBplFetch[4].uwLo, ulPlaneAddr & 0xFFFF);
     copSetMove(&pCmdList2[14 + 0].sMove, &g_pBplFetch[4].uwHi, ulPlaneAddr >> 16);
     copSetMove(&pCmdList2[14 + 1].sMove, &g_pBplFetch[4].uwLo, ulPlaneAddr & 0xFFFF);
-    if (ulPlaneAddr > ulEndPlaneAddr) 
-        //ulPlaneAddr = (ULONG)pBuffer;
+    if (ulPlaneAddr > ulEndPlaneAddr)
+    //ulPlaneAddr = (ULONG)pBuffer;
 #ifndef TEST
       ulPlaneAddr = (ULONG)(g_pBitmapTxtScroller->Planes[0]);
-#endif
+#endif*/
+    //scrollDown();
   }
   ulFrame++;
 #endif
@@ -583,6 +581,7 @@ void goatblocksGsLoop(void)
       ubTimerIndex = 0;
   }
 
+#if 0
   if (keyUse(KEY_Q))
   {
     //drawBlock2(s_pBlocks[0]);
@@ -601,7 +600,6 @@ void goatblocksGsLoop(void)
     if (ubTimerIndex >= MAXTIMERS)
       ubTimerIndex = 0;
   }
-#if 0
   if (keyUse(KEY_W))
   {
     //drawBlock2(s_pBlocks[1]);
@@ -630,8 +628,6 @@ void goatblocksGsLoop(void)
   }
 #endif
 
-  /*ULONG ulMod = ulFrame % 19;
-  updateRow(ulMod,ulMod+1);*/
   if ((ulFrame % 5) == 0)
     updateRow(0, 3);
   else if ((ulFrame % 5) == 1)
@@ -643,252 +639,7 @@ void goatblocksGsLoop(void)
   else if ((ulFrame % 5) == 4)
     updateRow(16, 19);
 
-#if 0
-
-  //if (keyUse(KEY_SPACE))
-  if ((ulFrame % 3) == 0)
-  {
-    tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
-    tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
-    tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
-
-    UBYTE ubBlockCounter;
-
-    UBYTE ubLastCopRowShow = 0;
-    for (ubBlockCounter = 0; ubBlockCounter < 6; ubBlockCounter++)
-    {
-      UWORD *pPalette = (UWORD *)goatblockplt_data;
-      tBlock *pBlock = &s_pBlocks[ubBlockCounter];
-
-      // Dimming procedure
-      if (pBlock->ubStatus == 1)
-      {
-        if (pBlock->bDimCounter == 15)
-          drawBlock2(*pBlock);
-        pBlock->bDimCounter--;
-        if (pBlock->bDimCounter < 0)
-        {
-          deleteBlock(*pBlock);
-          pBlock->bDimCounter = -1;
-          pBlock->ubStatus = 2;
-        }
-        else
-        {
-
-          UBYTE ubCopIndex = g_sWaitPositions[pBlock->ubRow] + 2;
-          UBYTE ubColCounter;
-          for (ubColCounter = 8; ubColCounter < 16; ubColCounter++)
-          {
-            UWORD uwColor = paletteColorDim(*pPalette, pBlock->bDimCounter);
-            copSetMoveBackAndFront(&g_pCustom->color[ubColCounter], uwColor);
-            //copSetMove(&pCmdListBack[ubCopIndex].sMove, &g_pCustom->color[ubColCounter], uwColor);
-            pPalette++;
-          }
-        }
-      } // end of dimming
-
-      // start of showing
-      else if (pBlock->ubStatus == 3)
-      {
-        if (pBlock->bDimCounter == 0)
-        {
-          drawBlock(*pBlock);
-          drawBlock2(*pBlock);
-        }
-        pBlock->bDimCounter++;
-
-        if (pBlock->bDimCounter > 15)
-        {
-          deleteBlock(*pBlock);
-          drawBlock(*pBlock);
-          pBlock->ubStatus = 0;
-          pBlock->bDimCounter = 15;
-        }
-        else
-        {
-          UBYTE ubCopIndex = g_sWaitPositions[pBlock->ubRow] + 2;
-          if (ubCopIndex != ubLastCopRowShow)
-          {
-            ubLastCopRowShow = ubCopIndex;
-            UBYTE ubColCounter;
-
-            for (ubColCounter = 8; ubColCounter < 16; ubColCounter++)
-            {
-              UWORD uwNewCol = paletteColorDim(*pPalette, pBlock->bDimCounter);
-              copSetMoveBackAndFront(&g_pCustom->color[ubColCounter], uwNewCol);
-              //copSetMove(&pCmdListBack[ubCopIndex].sMove, &g_pCustom->color[ubColCounter], uwNewCol);
-              pPalette++;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  else if ((ulFrame % 3) == 1)
-  {
-    tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
-    tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
-    tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
-
-    UBYTE ubBlockCounter;
-
-    UBYTE ubLastCopRowShow = 0;
-    for (ubBlockCounter = 6; ubBlockCounter < 12; ubBlockCounter++)
-    {
-      UWORD *pPalette = (UWORD *)goatblockplt_data;
-      tBlock *pBlock = &s_pBlocks[ubBlockCounter];
-
-      // Dimming procedure
-      if (pBlock->ubStatus == 1)
-      {
-        if (pBlock->bDimCounter == 15)
-          drawBlock2(*pBlock);
-        pBlock->bDimCounter--;
-        if (pBlock->bDimCounter < 0)
-        {
-          deleteBlock(*pBlock);
-          pBlock->bDimCounter = -1;
-          pBlock->ubStatus = 2;
-        }
-        else
-        {
-
-          UBYTE ubCopIndex = g_sWaitPositions[pBlock->ubRow] + 2;
-          UBYTE ubColCounter;
-          for (ubColCounter = 8; ubColCounter < 16; ubColCounter++)
-          {
-            UWORD uwColor = paletteColorDim(*pPalette, pBlock->bDimCounter);
-            copSetMoveBackAndFront(&g_pCustom->color[ubColCounter], uwColor);
-            //copSetMove(&pCmdListBack[ubCopIndex].sMove, &g_pCustom->color[ubColCounter], uwColor);
-            pPalette++;
-          }
-        }
-      } // end of dimming
-
-      // start of showing
-      else if (pBlock->ubStatus == 3)
-      {
-        if (pBlock->bDimCounter == 0)
-        {
-          drawBlock(*pBlock);
-          drawBlock2(*pBlock);
-        }
-        pBlock->bDimCounter++;
-
-        if (pBlock->bDimCounter > 15)
-        {
-          deleteBlock(*pBlock);
-          drawBlock(*pBlock);
-          pBlock->ubStatus = 0;
-          pBlock->bDimCounter = 15;
-        }
-        else
-        {
-          UBYTE ubCopIndex = g_sWaitPositions[pBlock->ubRow] + 2;
-          if (ubCopIndex != ubLastCopRowShow)
-          {
-            ubLastCopRowShow = ubCopIndex;
-            UBYTE ubColCounter;
-
-            for (ubColCounter = 8; ubColCounter < 16; ubColCounter++)
-            {
-              UWORD uwNewCol = paletteColorDim(*pPalette, pBlock->bDimCounter);
-              copSetMoveBackAndFront(&g_pCustom->color[ubColCounter], uwNewCol);
-              //copSetMove(&pCmdListBack[ubCopIndex].sMove, &g_pCustom->color[ubColCounter], uwNewCol);
-              pPalette++;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  else if ((ulFrame % 3) == 2)
-  {
-    updateRow(12,19);
-    tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
-    tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
-    tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
-
-    UBYTE ubBlockCounter;
-
-    UBYTE ubLastCopRowShow = 0;
-    for (ubBlockCounter = 12; ubBlockCounter < 19; ubBlockCounter++)
-    {
-      UWORD *pPalette = (UWORD *)goatblockplt_data;
-      tBlock *pBlock = &s_pBlocks[ubBlockCounter];
-
-      // Dimming procedure
-      if (pBlock->ubStatus == 1)
-      {
-        if (pBlock->bDimCounter == 15)
-          drawBlock2(*pBlock);
-        pBlock->bDimCounter--;
-        if (pBlock->bDimCounter < 0)
-        {
-          deleteBlock(*pBlock);
-          pBlock->bDimCounter = -1;
-          pBlock->ubStatus = 2;
-        }
-        else
-        {
-
-          UBYTE ubCopIndex = g_sWaitPositions[pBlock->ubRow] + 2;
-          UBYTE ubColCounter;
-          for (ubColCounter = 8; ubColCounter < 16; ubColCounter++)
-          {
-            UWORD uwColor = paletteColorDim(*pPalette, pBlock->bDimCounter);
-            copSetMoveBackAndFront(&g_pCustom->color[ubColCounter], uwColor);
-            //copSetMove(&pCmdListBack[ubCopIndex].sMove, &g_pCustom->color[ubColCounter], uwColor);
-            pPalette++;
-          }
-        }
-      } // end of dimming
-
-      // start of showing
-      else if (pBlock->ubStatus == 3)
-      {
-        if (pBlock->bDimCounter == 0)
-        {
-          drawBlock(*pBlock);
-          drawBlock2(*pBlock);
-        }
-        pBlock->bDimCounter++;
-
-        if (pBlock->bDimCounter > 15)
-        {
-          deleteBlock(*pBlock);
-          drawBlock(*pBlock);
-          pBlock->ubStatus = 0;
-          pBlock->bDimCounter = 15;
-        }
-        else
-        {
-          UBYTE ubCopIndex = g_sWaitPositions[pBlock->ubRow] + 2;
-          if (ubCopIndex != ubLastCopRowShow)
-          {
-            ubLastCopRowShow = ubCopIndex;
-            UBYTE ubColCounter;
-
-            for (ubColCounter = 8; ubColCounter < 16; ubColCounter++)
-            {
-              UWORD uwNewCol = paletteColorDim(*pPalette, pBlock->bDimCounter);
-              copSetMoveBackAndFront(&g_pCustom->color[ubColCounter], uwNewCol);
-              //copSetMove(&pCmdListBack[ubCopIndex].sMove, &g_pCustom->color[ubColCounter], uwNewCol);
-              pPalette++;
-            }
-          }
-        }
-      }
-    }
-    
-  }
-#endif
-
   vPortWaitForEnd(s_pVpMain);
-  //copSwapBuffers();
-  // if (swapBuffer) copSwapBuffers();
 }
 
 void goatblocksGsDestroy(void)
@@ -981,12 +732,12 @@ void initTimer()
   // Row 4 : 12 13 14 15 ( 4 cubes)
   // Row 5 : 16 17 18 (3 cubes)
 
-  INSERTTIMERBLOCK8(TIMESTEPSHORT, 0, 1, 3, 5, 7, 9, 10, 11); // 0 ( R)
-  INSERTTIMERBLOCK3(TIMESTEP, 12, 13, 17);                    // 1 ( R)
+  INSERTTIMERBLOCK7(TIMESTEPSHORT, 0, 1, 3, 5, 7, 10, 11); // 0 ( R)
+  INSERTTIMERBLOCK4(TIMESTEP,9, 12, 13, 17);                    // 1 ( R)
   INSERTTIMERBLOCK2(TIMESTEPSHORT, 5, 11);                    // 2 ( transition )
 
-  INSERTTIMERBLOCK6(TIMESTEP,2, 6, 8, 13, 16, 18);     // 3 (E)
-  INSERTTIMERBLOCK3(TIMESTEPSHORT, 6, 7, 12); // 4 (transition)
+  INSERTTIMERBLOCK6(TIMESTEP, 2, 6, 8, 13, 16, 18); // 3 (E)
+  INSERTTIMERBLOCK3(TIMESTEPSHORT, 6, 7, 12);       // 4 (transition)
 
   INSERTTIMERBLOCK1(TIMESTEP, 15);                              // 5 (S)
   INSERTTIMERBLOCK8(TIMESTEPSHORT, 0, 2, 3, 8, 10, 15, 16, 18); //6 (transition)
@@ -1002,15 +753,15 @@ void initTimer()
   INSERTTIMERBLOCK9(TIMESTEPSHORT, 0, 2, 3, 6, 9, 12, 13, 15, 17); //10 (transition)
   INSERTTIMERBLOCK4(TIMESTEP, 8, 10, 16, 18);                      // 11 (T)
 
-  INSERTTIMERBLOCK5(TIMESTEPSHORT, 1,5,8,10,13); //12 (transition)
-  INSERTTIMERBLOCK7(TIMESTEP, 0, 2, 3, 6, 7,9,11); // 13 (N)
+  INSERTTIMERBLOCK5(TIMESTEPSHORT, 1, 5, 8, 10, 13); //12 (transition)
+  INSERTTIMERBLOCK7(TIMESTEP, 0, 2, 3, 6, 7, 9, 11); // 13 (N)
 
-  INSERTTIMERBLOCK6(TIMESTEPSHORT, 4,6,9,11,14,15); //13 (transition)
-  INSERTTIMERBLOCK2(TIMESTEP,1,17); // 13 (C)
+  INSERTTIMERBLOCK6(TIMESTEPSHORT, 4, 6, 9, 11, 14, 15); //13 (transition)
+  INSERTTIMERBLOCK2(TIMESTEP, 1, 17);                    // 13 (C)
 
-  INSERTTIMERBLOCK4(TIMESTEP,6,8,9,10); // 14 (E)
-  INSERTTIMERBLOCK9(TIMESTEPSHORT,0,1,2,3,6,7,8,9,10); // 15 (CLEAR ALL)
-  INSERTTIMERBLOCK4(TIMESTEP,12,16,17,18); // 15 (CLEAR ALL)
+  INSERTTIMERBLOCK4(TIMESTEP, 6, 8, 9, 10);                     // 14 (E)
+  INSERTTIMERBLOCK9(TIMESTEPSHORT, 0, 1, 2, 3, 6, 7, 8, 9, 10); // 15 (CLEAR ALL)
+  INSERTTIMERBLOCK4(TIMESTEP, 12, 16, 17, 18);                  // 15 (CLEAR ALL)
 }
 #if 0
 void copyBplShifted(UWORD *pSrc, UWORD *pDst)
@@ -1115,5 +866,41 @@ void updateRow(UBYTE ubStart, UBYTE ubEnd)
         }
       }
     }
+  }
+}
+void scrollDown()
+{
+  static UBYTE ubScroller = 0;
+  ubScroller++;
+  if (ubScroller<4) return ;
+  ubScroller=0;
+  if ((g_pCustom->intreqr >> 4) & 1U)
+  {
+    g_pCustom->intreq = (1 << INTB_COPER);
+    g_pCustom->intreq = (1 << INTB_COPER);
+    static ULONG ulPlaneAddr = 0;
+    static ULONG ulEndPlaneAddr = 0;
+    if (ulPlaneAddr == 0)
+    {
+#ifndef TEST
+      ulPlaneAddr = (ULONG)(g_pBitmapTxtScroller->Planes[0]);
+#endif
+      //ulPlaneAddr = (ULONG)pBuffer;
+
+      ulEndPlaneAddr = ulPlaneAddr + 256 * 40 * 4;
+    }
+    ulPlaneAddr += 40;
+    tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
+    tCopCmd *pCmdList = &pCopList->pBackBfr->pList[s_pMainBuffer->uwCopperOffset];
+    tCopCmd *pCmdList2 = &pCopList->pFrontBfr->pList[s_pMainBuffer->uwCopperOffset];
+    myCopSetMove(&pCmdList[14 + 0].sMove, ulPlaneAddr >> 16);
+    myCopSetMove(&pCmdList[14 + 1].sMove, ulPlaneAddr & 0xFFFF);
+    myCopSetMove(&pCmdList2[14 + 0].sMove, ulPlaneAddr >> 16);
+    myCopSetMove(&pCmdList2[14 + 1].sMove, ulPlaneAddr & 0xFFFF);
+    if (ulPlaneAddr > ulEndPlaneAddr)
+    //ulPlaneAddr = (ULONG)pBuffer;
+#ifndef TEST
+      ulPlaneAddr = (ULONG)(g_pBitmapTxtScroller->Planes[0]);
+#endif
   }
 }

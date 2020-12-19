@@ -94,8 +94,8 @@ void slidingTxtGsDestroy(void)
 {
 
   // This will also destroy all associated viewports and viewport managers
- // viewDestroy(s_pView);
- g_tViewLateDestroy = (void*)s_pView;
+  viewDestroy(s_pView);
+ //g_tViewLateDestroy = (void*)s_pView;
 }
 
 void printCharToRight(char carToPrint)
