@@ -884,6 +884,7 @@ void gameGsLoop(void)
 #endif
 
     vPortWaitForEnd(s_pVpMain);
+    copSwapBuffers();
 
     if (ubTxtOverlayFlag)
     {
@@ -1249,7 +1250,7 @@ void updateCamera2(BYTE bX)
     ubCopIndex = s_ubBarColorsCopPositionsPerspectiveBack[0];
     SETBARCOLORSBACKPERSPECTIVEBACK;
 
-    copSwapBuffers();
+    //copSwapBuffers();
 }
 
 

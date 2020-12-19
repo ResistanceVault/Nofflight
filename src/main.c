@@ -89,7 +89,6 @@ void genericCreate(void)
   //p61Init(testmod_data);
 
   // Here goes your startup code
-  logWrite("Hello, Amiga!\n");
   keyCreate(); // We'll use keyboard
   g_pGameStateManager = stateManagerCreate();
   g_pGameStates[0] = stateCreate(introGsCreate, introGsLoop, introGsDestroy, 0, 0, 0);
@@ -125,7 +124,6 @@ void genericDestroy(void)
   stateDestroy(g_pGameStates[6]);
 
   keyDestroy(); // We don't need it anymore
-  logWrite("Goodbye, Amiga!\n");
 }
 
 UBYTE *LoadRes(ULONG ulSize, char *pFile)
