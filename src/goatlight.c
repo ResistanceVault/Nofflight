@@ -235,11 +235,11 @@ static UWORD s_pBarColorsPerspectiveBack[MAXCOLORS] = {
 #endif
 
 #define MAXCOLORSEFFECT 4 * 3
-static UWORD s_pBarColorEffect[MAXCOLORSEFFECT] = {
+/*static UWORD s_pBarColorEffect[MAXCOLORSEFFECT] = {
     0x0111, 0x0222, 0x0333,
     0x0AAA, 0x0BBB, 0x0CCC,
     0x0444, 0x0555, 0x0666,
-    0x0777, 0x0888, 0x0999};
+    0x0777, 0x0888, 0x0999};*/
 
 static UBYTE s_ubBarColorsCopPositions[MAXCOLORS];
 static UBYTE s_ubBarColorsCopPositionsBorder[MAXCOLORS];
@@ -605,6 +605,7 @@ Bitplane 4 - (quello per il testo , 1 testo on, 2 testo off)*/
 
 void gameGsLoop(void)
 {
+    static UBYTE bFlahsCols = 0;
     static UWORD uwFrameNo = 0;
 
 #ifdef COLORDEBUG
@@ -617,7 +618,8 @@ void gameGsLoop(void)
     uwFrameNo++;
 
     // Manage col change
-    if (uwFrameNo >= 300 && bIsExiting == 0)
+    //if (uwFrameNo >= 300 && bIsExiting == 0 && bFlahsCols)
+    if (bFlahsCols)
     {
         static BYTE bChan3Index = 0;
         static BYTE bChan4Index = 0;
@@ -688,7 +690,11 @@ void gameGsLoop(void)
     }
 
     // Accellerate
-    else if (uwFrameNo >= 1000 && uwFrameNo <= 1550 && (uwFrameNo % 6) == 0)
+    else if (uwFrameNo >= 1000 && uwFrameNo <= 1650 && (uwFrameNo % 6) == 0)
+    {
+        sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
+    }
+    else if (uwFrameNo >= 2900 && (uwFrameNo % 3) == 0)
     {
         sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
     }
@@ -699,6 +705,7 @@ void gameGsLoop(void)
         g_pCustom->bplcon0=0x4200;   // disables 5th bitplane when ball bouncing to save dma cycles
         setSpriteBallsCopperlistBack();
         s_ubMoveBalls = 1;
+        bFlahsCols = 1;
     }
     // Balls falls down
     else if (uwFrameNo == 1700)
@@ -713,8 +720,10 @@ void gameGsLoop(void)
         g_pCustom->bplcon0=0x5200; // re-enables 5th bitplane for txt
         s_ubMoveBalls = 0;
         ubTxtOverlayFlag = 1;
+        bFlahsCols = 0;
     }
-    else if (uwFrameNo == 3600)
+    // exiting stage
+    else if (uwFrameNo == 3000)
     {
 
         bIsExiting = 1;
@@ -1230,18 +1239,6 @@ void updateCamera2(BYTE bX)
     }
 
     ubCopIndex = s_ubBarColorsCopPositionsBorder[0];
-    /*pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(0);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(1);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(2);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(3);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(4);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(5);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(6);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(7);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(8);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(9);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(10);
-    pCmdListBack[ubCopIndex].sMove.bfValue = getBarColor(11);*/
     SETBARCOLORSBACKBORDERSTD;
 
     ubCopIndex = s_ubBarColorsCopPositionsPerspective[0];
@@ -1250,7 +1247,6 @@ void updateCamera2(BYTE bX)
     ubCopIndex = s_ubBarColorsCopPositionsPerspectiveBack[0];
     SETBARCOLORSBACKPERSPECTIVEBACK;
 
-    //copSwapBuffers();
 }
 
 
@@ -1858,9 +1854,9 @@ void printTextMsg(BYTE bX)
                                         'F', '@', 'A', '@', 'I', '@', 'R', '@', 'L', '@', 'I', '@', 'G', '@', 'H', '@', 'T', '@', '@', '@',
                                         /*'R', '@', 'E', '@', 'L', '@', 'E', '@', 'A', '@', 'S', '@', 'E', '@', 'D', '@', '@', '@',
                                         'A', '@', 'T', '@', '@', '@',*/
-                                        'F', '@', 'O', '@', 'R', '@', '@', '@', '@',
+                                        /*'F', '@', 'O', '@', 'R', '@', '@', '@', '@',
                                         'F', '@', 'L', '@', 'A', '@', 'S', '@', 'H', '@', 'P', '@', 'A', '@', 'R', '@', 'T', '@', 'Y', '@', '@', '@',
-                                        ']', '@', '[',  '@', ']', '@', '\\',  '@', '@', '@', '@',    
+                                        ']', '@', '[',  '@', ']', '@', '\\',  '@', '@', '@', '@',    */
                                         '@', '@', '@', '@', '@', '@', '@', '@'};
             UBYTE *pPtrTxtArray = pTxtArray + ubTxtArrayOffset;
             ubTxtArrayOffset++;
@@ -1883,31 +1879,6 @@ void printTextMsg(BYTE bX)
     }
 
     ubLastPosition = bX;
-
-   /* blitWait();
-        g_pCustom->bltcon0 = 0x09F0;
-        g_pCustom->bltcon1 = 0x0000;
-        g_pCustom->bltafwm = 0xFFFF;
-        g_pCustom->bltalwm = 0xFFFF;
-        g_pCustom->bltamod = 0x0008;
-        g_pCustom->bltdmod = 0x0000;
-        g_pCustom->bltapt = (UBYTE *)((ULONG)g_pBitmapHelper1->Planes[0] + 4 + (48 * YTEXTCOORDINATE));
-        g_pCustom->bltdpt = (UBYTE *)((ULONG)g_pBitmapHelperTmp->Planes[0]);
-        g_pCustom->bltsize = 0x0814;
-        // copy to g_pBitmapHelperTmp
-
-        blitWait();
-        g_pCustom->bltcon0 = 0x09F0;
-        g_pCustom->bltcon1 = 0x0000;
-        g_pCustom->bltafwm = 0xFFFF;
-        g_pCustom->bltalwm = 0xFFFF;
-        g_pCustom->bltamod = 0x0008;
-        g_pCustom->bltdmod = 0x0000;
-        g_pCustom->bltapt = (UBYTE *)((ULONG)g_pBitmapHelper2->Planes[0] + 4 + (48 * YTEXTCOORDINATE));
-        g_pCustom->bltdpt = (UBYTE *)((ULONG)g_pBitmapHelperTmp->Planes[1]);
-        g_pCustom->bltsize = 0x0814;
-        blitWait();
-        vPortWaitForEnd(s_pVpMain);*/
 }
 
 void blitBitPlane(UBYTE *pSrc, UBYTE *pDst)
