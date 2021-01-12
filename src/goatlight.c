@@ -17,32 +17,34 @@
 #include "../_res/ball2bpl16x16_frame1.h"
 
 #include "globals.h"
+#include "../include/time_stages.h"
 
 #include "../include/goatfonts.h"
+#include "../include/bigfonts.h"
 
-#define BITPLANES 5 // 4 bitplanes
-#define YTEXTCOORDINATE 175
+#define BITPLANES 5 // 5 bitplanes
+#define YTEXTCOORDINATE 167
 
 #define copSetWaitBackAndFront(var, var2)                    \
     copSetWait(&pCmdListBack[ubCopIndex].sWait, var, var2);  \
     copSetWait(&pCmdListFront[ubCopIndex].sWait, var, var2); \
     ubCopIndex++;
 
-#define copSetMoveBackAndFront(var, var2)                    \
-    mycopSetMove(&pCmdListBack[ubCopIndex].sMove, (void*)var, var2);  \
-    mycopSetMove(&pCmdListFront[ubCopIndex].sMove, (void*)var, var2); \
+#define copSetMoveBackAndFront(var, var2)                              \
+    mycopSetMove(&pCmdListBack[ubCopIndex].sMove, (void *)var, var2);  \
+    mycopSetMove(&pCmdListFront[ubCopIndex].sMove, (void *)var, var2); \
     ubCopIndex++;
 
-#define copSetMoveBack(var, var2)                           \
-    mycopSetMove((tCopMoveCmd *)&pCmdListBack[ubCopIndex].sMove,(void*) var, var2); \
+#define copSetMoveBack(var, var2)                                                    \
+    mycopSetMove((tCopMoveCmd *)&pCmdListBack[ubCopIndex].sMove, (void *)var, var2); \
     ubCopIndex++;
 
-static void mycopSetMove(tCopMoveCmd *pMoveCmd, void *pAddr, UWORD uwValue) {
-        pMoveCmd->bfUnused = 0;
-        pMoveCmd->bfDestAddr = (ULONG)pAddr - (ULONG)((UBYTE *)g_pCustom);
-        pMoveCmd->bfValue = uwValue;
+static void mycopSetMove(tCopMoveCmd *pMoveCmd, void *pAddr, UWORD uwValue)
+{
+    pMoveCmd->bfUnused = 0;
+    pMoveCmd->bfDestAddr = (ULONG)pAddr - (ULONG)((UBYTE *)g_pCustom);
+    pMoveCmd->bfValue = uwValue;
 }
-
 
 static tView *s_pView;    // View containing all the viewports
 static tVPort *s_pVpMain; // Viewport for playfield
@@ -51,6 +53,7 @@ static UWORD s_uwCopRawOffs = 0;
 static fix16_t sg_tVelocity;
 static fix16_t sg_tVelocityIncrementer;
 static UBYTE ubCopSpritesColorIndex = 0;
+static UBYTE ubCopSpritesBigTxtColorIndex = 0;
 
 void updateCamera2(BYTE);
 UWORD getBarColor(const UBYTE);
@@ -58,14 +61,41 @@ UWORD getBarColorPerspective(const UBYTE);
 UWORD getBarColorPerspectiveBack(const UBYTE);
 void setSpriteBallsCopperlistBack();
 
-/*void MaskScreen(UBYTE);
-void unMaskScreen(UBYTE);
-UBYTE unMaskIntro(UBYTE, UBYTE);*/
 void printPerspectiveRow2(tSimpleBufferTestManager *s_pMainBuffer, const UWORD, const UWORD, const UWORD);
 
 UBYTE buildPerspectiveCopperlist(UBYTE);
 
 void setHiddenRightBarColors(UWORD, UWORD, UWORD);
+
+#define BIGFONT(var) initBigFont(ubFontIndex++, var##_1_combined_data, var##_2_combined_data, var##_3_combined_data);
+static void initBigFonts();
+static void initBigFont(UBYTE, const unsigned char *, const unsigned char *, const unsigned char *);
+static void updateBigLetter(UBYTE);
+static void enableBigText();
+static void setCopSpritesBigTxtColorIndex();
+static void setCopSpritesBigTxtColorIndexReset();
+
+typedef struct _tBigFontData
+{
+    UBYTE *pChunk1;
+    UBYTE *pChunk2;
+    UBYTE *pChunk3;
+} tBigFontData;
+tBigFontData pBigFonts[30];
+static UBYTE ubBigTxtMove = 0;
+static UWORD s_uwCopSpriteOffs = 0;
+
+#define BLITSPRITE(var, var2)                   \
+    blitWait();                                 \
+    g_pCustom->bltcon0 = 0x09F0;                \
+    g_pCustom->bltcon1 = 0x0000;                \
+    g_pCustom->bltafwm = 0xFFFF;                \
+    g_pCustom->bltalwm = 0xFFFF;                \
+    g_pCustom->bltamod = 0x0000;                \
+    g_pCustom->bltdmod = 0x0000;                \
+    g_pCustom->bltapt = (UBYTE *)((ULONG)var);  \
+    g_pCustom->bltdpt = (UBYTE *)((ULONG)var2); \
+    g_pCustom->bltsize = 0x1501;
 
 #define MAXCOLORS 12
 
@@ -300,6 +330,12 @@ static UBYTE s_ubColorIndex = 0;
         copSetMoveBack(&g_pCustom->color[ubCounter + 9], getBarColor(ubCounter)); \
     }
 
+#define SETBARCOLORSBACKEXIT                                                      \
+    for (UBYTE ubCounter = 0; ubCounter < MAXCOLORS; ubCounter++)                 \
+    {                                                                             \
+        copSetMoveBackAndFront(&g_pCustom->color[ubCounter + 1], getBarColor(ubCounter)); \
+    }
+
 #define SETBARCOLORSBACKREDUCED                                                   \
     for (UBYTE ubCounter = 0; ubCounter < 4; ubCounter++)                         \
     {                                                                             \
@@ -320,7 +356,7 @@ static UBYTE s_ubColorIndex = 0;
         copSetMoveBack(&g_pCustom->color[ubCounter + 1], getBarColorPerspectiveBack(ubCounter)); \
     }
 
-#define SETBARCOLORSBACKBORDERSTD \
+#define SETBARCOLORSBACKBORDERSTD                                                 \
     for (UBYTE ubCounter = 0; ubCounter < MAXCOLORS; ubCounter++)                 \
     {                                                                             \
         copSetMoveBack(&g_pCustom->color[ubCounter + 1], getBarColor(ubCounter)); \
@@ -410,7 +446,7 @@ static UWORD uwChan4PlayedArray[15];
 void gameGsCreate(void)
 {
     // ULONG ulRawSize = SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES)+16;
-    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES) + MAXBALLS * 2 + ACE_SPRITES_COPPERLIST_SIZE + 10 + MAXCOLORS * 4 + PERSPECTIVEBLOCKSIZE * (PERSPECTIVEBARSNUMBER + PERSPECTIVEBARSNUMBERBACK) + 1
+    ULONG ulRawSize = (SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES) + MAXBALLS * 2 + ACE_SPRITES_COPPERLIST_SIZE + 10 + MAXCOLORS * 4 + PERSPECTIVEBLOCKSIZE * (PERSPECTIVEBARSNUMBER + PERSPECTIVEBARSNUMBERBACK) + 1 + 10
                        /*                   3 * 3 + // 32 bars - each consists of WAIT + 3 MOVE instruction
         1 +     // Final WAIT
         1       // Just to be sure*/
@@ -440,9 +476,10 @@ void gameGsCreate(void)
                                            TAG_END);
 
     s_uwCopRawOffs = SimpleBufferTestGetRawCopperlistInstructionCount(BITPLANES);
+    s_uwCopSpriteOffs = s_uwCopRawOffs;
 
     // We don't need anything from OS anymore
-     //systemUnuse();
+    //systemUnuse();
 
     for (UBYTE ubBallIndex = 0; ubBallIndex < MAXBALLS; ubBallIndex++)
     {
@@ -541,6 +578,21 @@ Bitplane 4 - (quello per il testo , 1 testo on, 2 testo off)*/
         copSetMoveBackAndFront(&g_pCustom->color[5], 0x000F);
     }
 
+    // Colors for big text
+    copSetWaitBackAndFront(0, 239);
+    ubCopSpritesBigTxtColorIndex = ubCopIndex;
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x055F);
+
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x055F);
+
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x055F);
+
 #if 0
 
 #endif
@@ -597,11 +649,16 @@ Bitplane 4 - (quello per il testo , 1 testo on, 2 testo off)*/
     uwChan2PlayedArray[1] = 0x0269;
     uwChan2PlayedArray[0] = 0x0069;
 
+    // Init big fonts
+    initBigFonts();
+
     // Load the view
     viewLoad(s_pView);
 
     //bitmapSave(s_pMainBuffer->pBack, "bitplanes.raw");
 }
+
+static BYTE bIsExiting = 0;
 
 void gameGsLoop(void)
 {
@@ -611,7 +668,7 @@ void gameGsLoop(void)
 #ifdef COLORDEBUG
     g_pCustom->color[0] = 0x0FF0;
 #endif
-    static BYTE bIsExiting = 0;
+    //static BYTE bIsExiting = 0;
     static BYTE bXCamera = 0;
 
 #ifdef AUTOSCROLLING
@@ -690,42 +747,62 @@ void gameGsLoop(void)
     }
 
     // Accellerate
-    else if (uwFrameNo >= 1000 && uwFrameNo <= 1650 && (uwFrameNo % 6) == 0)
+    else if (uwFrameNo >= 1000 && uwFrameNo <= 1550 && (uwFrameNo % 6) == 0)
     {
         sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
     }
-    else if (uwFrameNo >= 2900 && (uwFrameNo % 3) == 0)
+    // Final accelleration
+    else if (uwFrameNo >= 3000 && (uwFrameNo % 6) == 0)
     {
+        static UBYTE ubFirst = 1;
+        if (ubFirst)
+        {
+            g_pCustom->bplcon0 = 0x4200;
+            ubFirst=0;
+        }
         sg_tVelocity = fix16_add(sg_tVelocity, sg_tVelocityIncrementer);
     }
 
     // Show balls
     if (uwFrameNo == 300 || uwFrameNo == 301)
     {
-        g_pCustom->bplcon0=0x4200;   // disables 5th bitplane when ball bouncing to save dma cycles
+        g_pCustom->bplcon0 = 0x4200; // disables 5th bitplane when ball bouncing to save dma cycles
         setSpriteBallsCopperlistBack();
         s_ubMoveBalls = 1;
         bFlahsCols = 1;
     }
     // Balls falls down
-    else if (uwFrameNo == 1700)
+    else if (uwFrameNo == TIME_BALLS_FALL_DOWN)
     {
         g_ubVBounceEnabled = 0;
     }
 
     // Print text
-    else if (uwFrameNo == 2000)
+    else if (uwFrameNo == TIME_PRINT_TXT)
     {
-        disableSpritesAll();
-        g_pCustom->bplcon0=0x5200; // re-enables 5th bitplane for txt
-        s_ubMoveBalls = 0;
+        //disableSpritesAll();
+        enableBigText();
+        g_pCustom->bplcon0 = 0x5200; // re-enables 5th bitplane for txt
+        //s_ubMoveBalls = 0;
         ubTxtOverlayFlag = 1;
         bFlahsCols = 0;
+
+        s_pBarColors[0] = uwChan3PlayedArray[6];
+        s_pBarColors[4] = uwChan3PlayedArray[6];
+        s_pBarColors[8] = uwChan3PlayedArray[6];
+
+        s_pBarColors[1] = uwChan4PlayedArray[6];
+        s_pBarColors[5] = uwChan4PlayedArray[6];
+        s_pBarColors[9] = uwChan4PlayedArray[6];
+
+        s_pBarColors[2] = uwChan2PlayedArray[6];
+        s_pBarColors[6] = uwChan2PlayedArray[6];
+        s_pBarColors[10] = uwChan2PlayedArray[6];
     }
     // exiting stage
-    else if (uwFrameNo == 3000)
+    else if (uwFrameNo == TIME_EXITING_STAGE)
     {
-
+        setCopSpritesBigTxtColorIndexReset();
         bIsExiting = 1;
         ubTxtOverlayFlag = 0;
 
@@ -734,17 +811,22 @@ void gameGsLoop(void)
         tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
 
         UBYTE ubCopIndex = 1;
+        //g_pCustom->bplcon0 = 0x5200; // re-enables 5th bitplane for txt
 
         SETBARCOLORSFRONTANDBACK;
+        g_pCustom->bplcon0 = 0x5200;
+        //SETBARCOLORSBACKEXIT;
+
+        //mycopSetMove((tCopMoveCmd *)&pCmdListBack[1].sMove, &g_pCustom->color[0], 0x0ABC);
 
         for (UBYTE ubDumb = 0; ubDumb < 16; ubDumb++)
         {
             copSetMoveBackAndFront(&g_pCustom->color[5], 0x000F);
         }
+        disableSpritesAll();
     }
 
     updateCamera2(bXCamera);
-    
 
 #endif
 #if 0
@@ -855,13 +937,13 @@ void gameGsLoop(void)
             {
 
                 spriteVectorApplyForce(g_SpriteVector, &g_Gravity);
-                
+
                 v2d lol;
-                v2d_add(&lol,&g_SpriteVector->tVelocity,&g_SpriteVector->tAccelleration);
-                g_SpriteVector->tVelocity=lol;
+                v2d_add(&lol, &g_SpriteVector->tVelocity, &g_SpriteVector->tAccelleration);
+                g_SpriteVector->tVelocity = lol;
                 //moverAddAccellerationToVelocity(g_SpriteVector);
                 //moverAddVelocityToLocation(g_SpriteVector);
-                v2d_add(&g_SpriteVector->tLocation,&g_SpriteVector->tLocation,&g_SpriteVector->tVelocity);
+                v2d_add(&g_SpriteVector->tLocation, &g_SpriteVector->tLocation, &g_SpriteVector->tVelocity);
 
                 UWORD uwLocationX = (UWORD)fix16_to_int(g_SpriteVector->tLocation.x);
                 UWORD uwLocationY = (UWORD)fix16_to_int(g_SpriteVector->tLocation.y);
@@ -869,7 +951,7 @@ void gameGsLoop(void)
                 {
                     // Just a random point off screen
                     spriteMove3((FUBYTE)g_SpriteVector->ubSpriteIndex, (UWORD)0, (UWORD)300);
-                    (*g_SpriteVector).ubLocked=1;
+                    (*g_SpriteVector).ubLocked = 1;
                 }
                 spriteMove3((FUBYTE)g_SpriteVector->ubSpriteIndex, uwLocationX, uwLocationY);
 
@@ -895,10 +977,38 @@ void gameGsLoop(void)
     vPortWaitForEnd(s_pVpMain);
     copSwapBuffers();
 
+    if (ubBigTxtMove)
+    {
+        static BYTE bXCameraOld = 0;
+        BYTE bPixelMoved = bXCamera - bXCameraOld;
+        if (bPixelMoved < 0)
+            bPixelMoved += 32;
+        if (bPixelMoved)
+            bPixelMoved += 3;
+        bXCameraOld = bXCamera;
+
+        static UWORD uwBigTxtA = 57;
+        uwBigTxtA -= bPixelMoved;
+        spriteMove3(0, uwBigTxtA, 196);
+        if (uwBigTxtA > 320 && uwBigTxtA < 65535 - 48)
+        {
+            updateBigLetter(0);
+            uwBigTxtA = 320;
+        }
+
+        static UWORD uwBigTxtB = 217 + 24;
+        uwBigTxtB -= bPixelMoved;
+        spriteMove3(3, uwBigTxtB, 196);
+        if (uwBigTxtB > 320 && uwBigTxtB < 65535 - 48)
+        {
+            updateBigLetter(3);
+            uwBigTxtB = 320;
+        }
+    }
+
     if (ubTxtOverlayFlag)
     {
         printTextMsg(bXCamera);
- 
     }
 
     static BYTE bIntroColorIndex = 11;
@@ -984,7 +1094,6 @@ void updateCamera2(BYTE bX)
 
     if (ubTxtOverlayFlag || s_ubMoveBalls)
     {
-        //printTextMsg(bX);
 #if 1
         static UBYTE ubLastPosition = 0;
         static UWORD uwCycleCounter = 0;
@@ -998,41 +1107,14 @@ void updateCamera2(BYTE bX)
         if (bCurrentPosition < 0)
         {
             uwCycleCounter++;
-            /*{
-                static UBYTE ubTxtArrayOffset = 0;
-                static UBYTE pTxtArray[] = {1, 0, 1, 0, 1};
-                UBYTE *pPtrTxtArray = pTxtArray + ubTxtArrayOffset;
-                ubTxtArrayOffset++;
-
-                for (UWORD uwCycleCont = 0; uwCycleCont < uwCycleCounter; uwCycleCont++)
-                {
-                    if ((*pPtrTxtArray) == 0)
-                        printTxtCharEmpty(40 - uwCycleCont * 4);
-                    else
-                        printTxtChar(40 - uwCycleCont * 4);
-                    pPtrTxtArray--;
-                }
-            }*/
 
 #ifdef ACE_DEBUG
             logWrite("UpdateCamera2 full cycle detected: %u\n", uwCycleCounter);
 #endif
         }
-        /*if (uwCycleCounter == 12)
-            gameExit();*/
 
         ubLastPosition = bX;
 #endif
-
-        /*if (bX == 0 && s_ulTxtPlaneCounter)
-            s_ulTxtPlaneCounter += 2;*/
-        /*if (bX > 16)
-        {
-            s_ulTxtPlaneCounter += 2;
-            while (ubTxtFrameCounter>16) ubTxtFrameCounter-=16;
-        }*/
-
-        ///while (ubTxtFrameCounter>31) ubTxtFrameCounter-=31;
 
         UWORD uwOffset = uwCycleCounter << 2;
         uwOffset = 0;
@@ -1212,9 +1294,6 @@ void updateCamera2(BYTE bX)
 
             if (ubPerspectiveRowCounter > 0)
             {
-                /*copSetMove(&pCmdListBack[4 + tBarPrev->ubCopIndex].sMove, &g_pCustom->bpl1mod, 0x0008);
-                copSetMove(&pCmdListBack[5 + tBarPrev->ubCopIndex].sMove, &g_pCustom->bpl2mod, 0x0008);*/
-
                 copSetMove(&pCmdListBack[0 + tBarPrev->ubCopIndex2].sMove, &g_pCustom->bpl1mod, 0x0008);
                 copSetMove(&pCmdListBack[1 + tBarPrev->ubCopIndex2].sMove, &g_pCustom->bpl2mod, 0x0008);
             }
@@ -1228,7 +1307,14 @@ void updateCamera2(BYTE bX)
 
     ubCopIndex = 1; // must be one because at zero we would get wait instruction
 
-    // if da togliere è solo un test
+    /*if (bIsExiting)
+    {
+        //SETBARCOLORSBACK;
+        /*tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
+        tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
+        SETBARCOLORSBACKEXIT;*/
+    /*}
+    else*/
     if (ubTxtOverlayFlag == 0 && s_ubMoveBalls == 0)
     {
         SETBARCOLORSBACK;
@@ -1246,10 +1332,7 @@ void updateCamera2(BYTE bX)
 
     ubCopIndex = s_ubBarColorsCopPositionsPerspectiveBack[0];
     SETBARCOLORSBACKPERSPECTIVEBACK;
-
 }
-
-
 
 UWORD getBarColor(const UBYTE ubColNo)
 {
@@ -1787,7 +1870,7 @@ void printTextMsg(BYTE bX)
         g_pCustom->color[0]=0X0f00;
         next = 1;
     }*/
-    if (next==1)
+    if (next == 1)
     {
         blitWait();
         g_pCustom->bltcon0 = 0x09F0;
@@ -1957,4 +2040,144 @@ void setSpriteBallsCopperlistBack()
     copSetMoveBack(&g_pCustom->color[30], 0x0922);
     copSetMoveBack(&g_pCustom->color[31], 0x0b77);
     // Sprites colors end
+}
+
+static void initBigFont(UBYTE ubFontIndex, const unsigned char *pFirst, const unsigned char *pSecond, const unsigned char *pThird)
+{
+    pBigFonts[ubFontIndex].pChunk1 = (UBYTE *)pFirst;
+    pBigFonts[ubFontIndex].pChunk2 = (UBYTE *)pSecond;
+    pBigFonts[ubFontIndex].pChunk3 = (UBYTE *)pThird;
+}
+
+static void initBigFonts()
+{
+    UBYTE ubFontIndex = 0;
+
+    BIGFONT(A);
+    BIGFONT(B);
+    BIGFONT(C);
+    BIGFONT(D);
+    BIGFONT(E);
+    BIGFONT(F);
+    BIGFONT(G);
+    BIGFONT(H);
+    BIGFONT(I);
+    BIGFONT(J);
+    BIGFONT(K);
+    BIGFONT(L);
+    BIGFONT(M);
+    BIGFONT(N);
+    BIGFONT(O);
+    BIGFONT(P);
+    BIGFONT(Q);
+    BIGFONT(R);
+    BIGFONT(S);
+    BIGFONT(T);
+    BIGFONT(U);
+    BIGFONT(V);
+    BIGFONT(W);
+    BIGFONT(X);
+    BIGFONT(Y);
+    BIGFONT(Z);
+    BIGFONT(N0);
+    BIGFONT(N1);
+    BIGFONT(N2);
+    BIGFONT(Space);
+}
+
+static void updateBigLetter(UBYTE ubSpriteNumber)
+{
+    //static char Phrase[] = {"[\\]ABCDEFGHIJKLMNOPQRSTUVWXYZ@"};
+    //static char Phrase[] = {"LOVE^FLASHPARTY^][]\\^EDITON^^GREETINGS^TO^OUR^FRIENDS^IN^BUENOS^AIRES^@"};
+    static char Phrase[] = {"THE^CULT^OF^AMIGA^NEVER^DIES^^?@"};
+    static char *pPhrase = Phrase;
+    char Lettera = *pPhrase;
+
+    tBigFontData *pCurrBigLetter = &pBigFonts[(UBYTE)Lettera - 65];
+
+    /*memcpy(s_pAceSprites[ubSpriteNumber++].pSpriteData + 4, pCurrBigLetter->pChunk1, A_1_combined_size);
+    memcpy(s_pAceSprites[ubSpriteNumber++].pSpriteData + 4, pCurrBigLetter->pChunk2, A_2_combined_size);
+    memcpy(s_pAceSprites[ubSpriteNumber++].pSpriteData + 4, pCurrBigLetter->pChunk3, A_3_combined_size);*/
+
+    /*CopyMemQuick(  pCurrBigLetter->pChunk1,s_pAceSprites[ubSpriteNumber++].pSpriteData + 4, A_1_combined_size );
+    CopyMemQuick( pCurrBigLetter->pChunk2, s_pAceSprites[ubSpriteNumber++].pSpriteData + 4, A_2_combined_size);
+    CopyMemQuick(pCurrBigLetter->pChunk3,s_pAceSprites[ubSpriteNumber++].pSpriteData + 4, A_3_combined_size);*/
+
+    BLITSPRITE(pCurrBigLetter->pChunk1, s_pAceSprites[ubSpriteNumber++].pSpriteData + 4);
+    BLITSPRITE(pCurrBigLetter->pChunk2, s_pAceSprites[ubSpriteNumber++].pSpriteData + 4);
+    BLITSPRITE(pCurrBigLetter->pChunk3, s_pAceSprites[ubSpriteNumber++].pSpriteData + 4);
+
+    pPhrase++;
+    if (*pPhrase == '@')
+        ubBigTxtMove = 0;
+    // pPhrase = Phrase;
+}
+static void enableBigText()
+{
+    setCopSpritesBigTxtColorIndex();
+    s_ubMoveBalls = 0;
+    ubTxtOverlayFlag = 1;
+
+    /*******************************/
+    /*** START OF FIRST  LETTER ****/
+    /*******************************/
+    copBlockEnableSpriteEmpty(s_pView->pCopList, 0, A_1_combined_size, s_uwCopSpriteOffs);
+    copBlockEnableSpriteEmpty(s_pView->pCopList, 1, A_2_combined_size, s_uwCopSpriteOffs);
+    s_pAceSprites[0].bTrailingSpriteIndex = 1;
+
+    copBlockEnableSpriteEmpty(s_pView->pCopList, 2, A_3_combined_size, s_uwCopSpriteOffs);
+    s_pAceSprites[1].bTrailingSpriteIndex = 2;
+
+    /*******************************/
+    /*** START OF SECOND LETTER ****/
+    /*******************************/
+    //Lettera = 'B';
+    // pCurrBigLetter = &pBigFonts[(UBYTE)Lettera - 65];
+    copBlockEnableSpriteEmpty(s_pView->pCopList, 3, B_1_combined_size, s_uwCopSpriteOffs);
+    copBlockEnableSpriteEmpty(s_pView->pCopList, 4, B_2_combined_size, s_uwCopSpriteOffs);
+    s_pAceSprites[3].bTrailingSpriteIndex = 4;
+    copBlockEnableSpriteEmpty(s_pView->pCopList, 5, B_3_combined_size, s_uwCopSpriteOffs);
+    s_pAceSprites[4].bTrailingSpriteIndex = 5;
+
+    ubBigTxtMove = 1;
+}
+
+static void setCopSpritesBigTxtColorIndex()
+{
+    tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
+    tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
+    tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
+
+    UBYTE ubCopIndex = ubCopSpritesBigTxtColorIndex;
+    copSetMoveBackAndFront(&g_pCustom->color[17], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[18], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[19], 0x055F);
+
+    copSetMoveBackAndFront(&g_pCustom->color[21], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[22], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[23], 0x055F);
+
+    copSetMoveBackAndFront(&g_pCustom->color[25], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[26], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[27], 0x055F);
+}
+
+static void setCopSpritesBigTxtColorIndexReset()
+{
+    tCopList *pCopList = s_pMainBuffer->sCommon.pVPort->pView->pCopList;
+    tCopCmd *pCmdListBack = &pCopList->pBackBfr->pList[s_uwCopRawOffs];
+    tCopCmd *pCmdListFront = &pCopList->pFrontBfr->pList[s_uwCopRawOffs];
+
+    UBYTE ubCopIndex = ubCopSpritesBigTxtColorIndex;
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x055F);
+
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x055F);
+
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x0FFF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x00CF);
+    copSetMoveBackAndFront(&g_pCustom->color[15], 0x055F);
 }

@@ -172,9 +172,11 @@ tCopBlock *copBlockEnableSpriteFull(tCopList *pList, FUBYTE fubSpriteIndex, UBYT
   return NULL;
 }
 
+static UBYTE ubCopInit = 0;
+
 void copBlockEnableSpriteRaw(tCopList *pList, FUBYTE fubSpriteIndex, UBYTE *pSpriteData, ULONG ulSpriteSize, FUWORD fuwCopRawOffs)
 {
-  static UBYTE ubCopInit = 0;
+  
   if (ubCopInit == 0)
   {
     ubCopInit = 1;
@@ -261,6 +263,82 @@ void copBlockEnableSpriteRaw(tCopList *pList, FUBYTE fubSpriteIndex, UBYTE *pSpr
 
   copSetMove(pCmd2++, &g_pSprFetch[fubSpriteIndex].uwHi, ulAddr >> 16);
   copSetMove(pCmd2, &g_pSprFetch[fubSpriteIndex].uwLo, ulAddr & 0xFFFF);
+}
+
+void copBlockEnableSpriteEmpty(tCopList *pList, FUBYTE fubSpriteIndex,  ULONG ulSpriteSize, FUWORD fuwCopRawOffs)
+{
+  if (ubCopInit == 0)
+  {
+    ubCopInit = 1;
+    copRawDisableSprites(pList, 0xFF, fuwCopRawOffs);
+    systemSetDma(DMAB_SPRITE, 1);
+
+    // Reset tAceSprite array
+    for (UBYTE ubIterator = 0; ubIterator < ACE_MAXSPRITES; ubIterator++)
+    {
+      s_pAceSprites[ubIterator].pSpriteData = NULL;
+      s_pAceSprites[ubIterator].ulSpriteSize = 0;
+      s_pAceSprites[ubIterator].bTrailingSpriteIndex = -1;
+      s_pAceSprites[ubIterator].uwSpriteHeight = 0;
+      s_pAceSprites[ubIterator].uwSpriteCenter = 0;
+      s_pAceSprites[ubIterator].iBounceBottomLimit = 0;
+      s_pAceSprites[ubIterator].iBounceRightLimit = 0;
+    }
+  }
+  if (s_pAceSprites[fubSpriteIndex].pSpriteData)
+  {
+    FreeMem(s_pAceSprites[fubSpriteIndex].pSpriteData, s_pAceSprites[fubSpriteIndex].ulSpriteSize);
+    s_pAceSprites[fubSpriteIndex].pSpriteData = NULL;
+    s_pAceSprites[fubSpriteIndex].ulSpriteSize = 0;
+    s_pAceSprites[fubSpriteIndex].bTrailingSpriteIndex = -1;
+    s_pAceSprites[fubSpriteIndex].uwSpriteHeight = 0;
+    s_pAceSprites[fubSpriteIndex].uwSpriteCenter = 0;
+    s_pAceSprites[fubSpriteIndex].iBounceBottomLimit = 0;
+    s_pAceSprites[fubSpriteIndex].iBounceRightLimit = 0;
+  }
+
+  // Bounce limits
+  s_pAceSprites[fubSpriteIndex].iBounceBottomLimit = 255 - ulSpriteSize / 4;
+  s_pAceSprites[fubSpriteIndex].iBounceRightLimit = 319 - 16;
+
+  s_pAceSprites[fubSpriteIndex].uwSpriteHeight = ulSpriteSize / 4;
+  s_pAceSprites[fubSpriteIndex].uwSpriteCenter = 8;
+
+  //Make some room for sprite extra information
+  ulSpriteSize += 8;
+
+  s_pAceSprites[fubSpriteIndex].pSpriteData = (UBYTE *)AllocMem(ulSpriteSize, MEMF_CHIP|MEMF_CLEAR);
+  //memset(s_pAceSprites[fubSpriteIndex].pSpriteData, 0, ulSpriteSize);
+
+  const UBYTE ubVStart = 0x60;
+  const UBYTE ubHStart = 0x90;
+  s_pAceSprites[fubSpriteIndex].pSpriteData[0] = ubVStart; // ubVStart
+  s_pAceSprites[fubSpriteIndex].pSpriteData[1] = ubHStart; // ubHstart
+  s_pAceSprites[fubSpriteIndex].pSpriteData[2] = (UBYTE)((ulSpriteSize - 8) / 4) + ubVStart;
+  s_pAceSprites[fubSpriteIndex].pSpriteData[3] = 0x00;
+
+  s_pAceSprites[fubSpriteIndex].ulSpriteSize = ulSpriteSize - 8;
+
+  // Terminator
+  s_pAceSprites[fubSpriteIndex].pSpriteData[ulSpriteSize - 1] = 0x00;
+  s_pAceSprites[fubSpriteIndex].pSpriteData[ulSpriteSize - 2] = 0x00;
+  s_pAceSprites[fubSpriteIndex].pSpriteData[ulSpriteSize - 3] = 0x00;
+  s_pAceSprites[fubSpriteIndex].pSpriteData[ulSpriteSize - 4] = 0x00;
+
+  ULONG ulAddr = (ULONG)s_pAceSprites[fubSpriteIndex].pSpriteData;
+
+  tCopMoveCmd *pCmd = &pList->pBackBfr->pList[fuwCopRawOffs].sMove;
+  tCopMoveCmd *pCmd2 = &pList->pFrontBfr->pList[fuwCopRawOffs].sMove;
+
+  pCmd += fubSpriteIndex * 2;
+  pCmd2 += fubSpriteIndex * 2;
+
+  copSetMove(pCmd++, &g_pSprFetch[fubSpriteIndex].uwHi, ulAddr >> 16);
+  copSetMove(pCmd, &g_pSprFetch[fubSpriteIndex].uwLo, ulAddr & 0xFFFF);
+
+  copSetMove(pCmd2++, &g_pSprFetch[fubSpriteIndex].uwHi, ulAddr >> 16);
+  copSetMove(pCmd2, &g_pSprFetch[fubSpriteIndex].uwLo, ulAddr & 0xFFFF);
+
 }
 
 void spriteMove3(FUBYTE fubSpriteIndex, WORD x, WORD y)

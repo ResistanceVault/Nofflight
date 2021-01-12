@@ -136,8 +136,8 @@ void mivampiraLogoGsCreate(void)
 void mivampiraLogoGsLoop(void)
 {
 	static int iFrameNo = 0;
-	static BYTE bDimCounter = 0;
-	static BYTE bDimCounter2 = 15;
+	/*static BYTE bDimCounter = 0;
+	static BYTE bDimCounter2 = 15;*/
 
 	/*if (keyCheck(KEY_ESCAPE))
     {
@@ -312,7 +312,7 @@ void mivampiraLogoGsLoop(void)
 		static ULONG x = 0;
 		static ULONG y = 0;
 		static UBYTE ubFinish = 0;
-		static UBYTE ubRotoZoom = 0;
+		//static UBYTE ubRotoZoom = 0;
 		static UWORD uwAniWait = ANIMATIONWAIT;
 
 		if (ubFinish && uwAniWait)
