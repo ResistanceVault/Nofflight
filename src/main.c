@@ -13,7 +13,8 @@
 #include "flashimage.h"
 
 #include "radiallineshiddenpart.h"
-#include "../include/findaway.h"
+#include "../include/chippy_wip_3.h"
+//#include "../include/findaway.h"
 //#include "../include/Dirty_Tricks.h"
 //#include "player610.6.no_cia.bin.h"
 //#include "testmod.p61.h"
@@ -85,7 +86,8 @@ void genericCreate(void)
   LoadRes(26880, "data/VampireItalialogo.raw");
 
   // Init music
-  mt_init(findaway_data);
+  //mt_init(findaway_data);
+  mt_init(chippy_wip_3_data);
   //p61Init(testmod_data);
 
   // Here goes your startup code
