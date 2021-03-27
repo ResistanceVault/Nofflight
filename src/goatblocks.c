@@ -110,7 +110,7 @@ static tTextBitMap *s_pGlyph;
 static tBitMap *g_pBitmapTxtScroller;
 
 static char *g_pTxt[] = {
-    "Flash 2021", "",
+    "Nofflight", "",
     "A demo by Ozzyboshi presented at ",
     "flashparty 2021",
     "",
@@ -127,7 +127,7 @@ static char *g_pTxt[] = {
     "to Fairlight / Noice / Offence",
     "and a good exercise for me",
     "practicing hardware programming",
-    "on real amigas.",
+    "on real Amigas.",
     "All the effect were reproduced and tweaked ",
     "according to my own tastes."
     "",
