@@ -29,7 +29,7 @@ void introGsCreate(void)
     // Now let's do the same for main playfield
     s_pVpMain = vPortCreate(0,
                             TAG_VPORT_VIEW, s_pView,
-                            TAG_VPORT_BPP, 3, // 3 bits per pixel, 8 colors
+                            TAG_VPORT_BPP, 4, // 4 bits per pixel, 16 colors
                                               // We won't specify height here - viewport will take remaining space.
                             TAG_END);
     s_pMainBuffer = simpleBufferCreate(0,
@@ -57,8 +57,9 @@ void introGsCreate(void)
     s_pVpMain->pPalette[6] = 0x0000;
     s_pVpMain->pPalette[7] = 0x0000;
 
+
     UBYTE* vampireitalialogo_data_fast = g_pBuffer;
-    copyToMainBplIntro(vampireitalialogo_data_fast, 0, 3);
+    copyToMainBplIntro(vampireitalialogo_data_fast, 0, 4);
 
     // We don't need anything from OS anymore
     systemUnuse();
@@ -75,6 +76,8 @@ void introGsLoop(void)
     static BYTE bDimCounter2 = 15;
     if (bDimCounter <= 15)
     {
+        #ifdef VAMPIREITALIALOGO
+
         s_pVpMain->pPalette[1] = paletteColorDim(0x0600, bDimCounter);
         s_pVpMain->pPalette[2] = paletteColorDim(0x0300, bDimCounter);
         s_pVpMain->pPalette[3] = paletteColorDim(0x0900, bDimCounter);
@@ -82,6 +85,26 @@ void introGsLoop(void)
         s_pVpMain->pPalette[5] = paletteColorDim(0x0800, bDimCounter);
         s_pVpMain->pPalette[6] = paletteColorDim(0x0500, bDimCounter);
         s_pVpMain->pPalette[7] = paletteColorDim(0x0b00, bDimCounter);
+        #else
+        s_pVpMain->pPalette[0] = paletteColorDim(0x0134, bDimCounter);
+        s_pVpMain->pPalette[1] = paletteColorDim(0x0012, bDimCounter);
+        s_pVpMain->pPalette[2] = paletteColorDim(0x0223, bDimCounter);
+        s_pVpMain->pPalette[3] = paletteColorDim(0x0334, bDimCounter);
+        s_pVpMain->pPalette[4] = paletteColorDim(0x0534, bDimCounter);
+        s_pVpMain->pPalette[5] = paletteColorDim(0x0645, bDimCounter);
+        s_pVpMain->pPalette[6] = paletteColorDim(0x0756, bDimCounter);
+
+        s_pVpMain->pPalette[7] = paletteColorDim(0x0668, bDimCounter);
+        s_pVpMain->pPalette[8] = paletteColorDim(0x0679, bDimCounter);
+        s_pVpMain->pPalette[9] = paletteColorDim(0x0689, bDimCounter);
+        s_pVpMain->pPalette[10] = paletteColorDim(0x0899, bDimCounter);
+        s_pVpMain->pPalette[11] = paletteColorDim(0x0AAA, bDimCounter);
+        s_pVpMain->pPalette[12] = paletteColorDim(0x0BBB, bDimCounter);
+        s_pVpMain->pPalette[13] = paletteColorDim(0x0CDD, bDimCounter);
+        s_pVpMain->pPalette[14] = paletteColorDim(0x0DEE, bDimCounter);
+        s_pVpMain->pPalette[15] = paletteColorDim(0x0FFF, bDimCounter);
+
+        #endif
 
         if ((iFrameNo % 10) == 0)
             bDimCounter++;
@@ -91,13 +114,32 @@ void introGsLoop(void)
     {
         if (bDimCounter2 >= 0)
         {
-            s_pVpMain->pPalette[1] = paletteColorDim(0x0600, bDimCounter2);
+            /*s_pVpMain->pPalette[1] = paletteColorDim(0x0600, bDimCounter2);
             s_pVpMain->pPalette[2] = paletteColorDim(0x0300, bDimCounter2);
             s_pVpMain->pPalette[3] = paletteColorDim(0x0900, bDimCounter2);
             s_pVpMain->pPalette[4] = paletteColorDim(0x0200, bDimCounter2);
             s_pVpMain->pPalette[5] = paletteColorDim(0x0800, bDimCounter2);
             s_pVpMain->pPalette[6] = paletteColorDim(0x0500, bDimCounter2);
-            s_pVpMain->pPalette[7] = paletteColorDim(0x0b00, bDimCounter2);
+            s_pVpMain->pPalette[7] = paletteColorDim(0x0b00, bDimCounter2);*/
+
+            s_pVpMain->pPalette[0] = paletteColorDim(0x0134, bDimCounter2);
+        s_pVpMain->pPalette[1] = paletteColorDim(0x0012, bDimCounter2);
+        s_pVpMain->pPalette[2] = paletteColorDim(0x0223, bDimCounter2);
+        s_pVpMain->pPalette[3] = paletteColorDim(0x0334, bDimCounter2);
+        s_pVpMain->pPalette[4] = paletteColorDim(0x0534, bDimCounter2);
+        s_pVpMain->pPalette[5] = paletteColorDim(0x0645, bDimCounter2);
+        s_pVpMain->pPalette[6] = paletteColorDim(0x0756, bDimCounter2);
+
+        s_pVpMain->pPalette[7] = paletteColorDim(0x0668, bDimCounter2);
+        s_pVpMain->pPalette[8] = paletteColorDim(0x0679, bDimCounter2);
+        s_pVpMain->pPalette[9] = paletteColorDim(0x0689, bDimCounter2);
+        s_pVpMain->pPalette[10] = paletteColorDim(0x0899, bDimCounter2);
+        s_pVpMain->pPalette[11] = paletteColorDim(0x0AAA, bDimCounter2);
+        s_pVpMain->pPalette[12] = paletteColorDim(0x0BBB, bDimCounter2);
+        s_pVpMain->pPalette[13] = paletteColorDim(0x0CDD, bDimCounter2);
+        s_pVpMain->pPalette[14] = paletteColorDim(0x0DEE, bDimCounter2);
+        s_pVpMain->pPalette[15] = paletteColorDim(0x0FFF, bDimCounter2);
+
             if ((iFrameNo % 10) == 0)
                 bDimCounter2--;
         }

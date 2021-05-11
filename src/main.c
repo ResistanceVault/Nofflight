@@ -83,7 +83,9 @@ void genericCreate(void)
   systemUnuseNoInts2();*/
 
   //LoadRes(51200,"data/resistance_final.raw");
-  LoadRes(26880, "data/VampireItalialogo.raw");
+  //LoadRes(26880, "data/VampireItalialogo.raw");
+
+  LoadRes(35840, "data/piston_logo.raw");
 
   // Init music
   //mt_init(findaway_data);
