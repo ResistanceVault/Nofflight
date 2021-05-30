@@ -12,7 +12,7 @@
 
 #define IMGWAITTICKS 600
 #define BITPLANES 4
-#define SPEED 8
+#define SPEED 7
 
 // All variables outside fns are global - can be accessed in any fn
 // Static means here that given var is only for this file, hence 's_' prefix

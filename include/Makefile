@@ -213,6 +213,7 @@ top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
 MODDIR = ../_res/MOD/
+IFFDIR = ../_res/IFF/
 all: all-am
 
 .SUFFIXES:
@@ -319,8 +320,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-am
-
 clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-am
@@ -401,12 +400,14 @@ uninstall-am:
 .PRECIOUS: Makefile
 
 
-all Dirty_Tricks.h: ${MODDIR}Dirty_Tricks.mod
-#incbin.sh ${MODDIR}Dirty_Tricks.mod Dirty_Tricks.h Dirty_Tricks
+all Dirty_Tricks.h goatblock32X32.h goatblockplt.h: ${MODDIR}Dirty_Tricks.mod ${IFFDIR}goatblock.iff
 	incbin.sh ${MODDIR}chippy.mod Dirty_Tricks.h Dirty_Tricks
+	ilbm2raw ${IFFDIR}goatblock_32x32.iff ${IFFDIR}goatblock32X32.raw -p ${IFFDIR}goatblockplt.plt
+	incbin.sh ${IFFDIR}goatblock32X32.raw goatblock32X32.h goatblock32X32
+	incbin.sh ${IFFDIR}goatblockplt.plt goatblockplt.h goatblockplt
 
-#clean: 
-#	rm *.h
+clean: 
+	rm -f goatblock32X32.h goatblockplt.h
 
 #    incbin.sh Dirty_Tricks.mod Dirty_Tricks.h Dirty_Tricks
 
