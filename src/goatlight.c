@@ -684,7 +684,7 @@ void gameGsLoop(void)
         //int g_iChan4Played = chan2played();
         //g_iChan4Played=uwFrameNo%10;
 
-        if (g_iChan4Played)
+        if (g_iChan2Played)
             bChan3Index = 0;
         else
         {
@@ -696,7 +696,7 @@ void gameGsLoop(void)
         s_pBarColors[4] = uwChan3PlayedArray[bChan3Index];
         s_pBarColors[8] = uwChan3PlayedArray[bChan3Index];
 
-        if (g_iChan4Played)
+        if (g_iChan2Played)
             bChan4Index = 0;
         else
         {

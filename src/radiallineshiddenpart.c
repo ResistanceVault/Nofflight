@@ -169,7 +169,7 @@ void radialLinesGsCreate(void)
 void radialLinesGsLoop(void)
 {
 
-    int iChan3Played = 0;
+    //int iChan3Played = 0;
 
     // This will loop forever until you "pop" or change gamestate
     // or close the game
@@ -229,14 +229,14 @@ void radialLinesGsLoop(void)
             UWORD uwThreeqX1 = (uwHalfX1 + uwX1) >> 1;
             UWORD uwThreeqY1 = (uwHalfY1 + uwY1) >> 1;
 
-            if (iChan3Played)
+            /*if (iChan3Played)
                 DrawlineOr((UBYTE *)((ULONG)s_pMainBufferRadialLines->pBack->Planes[0]),
                            80 + x + uwCenterOffset,
                            80 + y + uwCenterOffset,
                            x + uwX1,
                            y + uwY1);
 
-            else
+            else*/
                 DrawlineOr((UBYTE *)((ULONG)s_pMainBufferRadialLines->pBack->Planes[0]),
                            80 + x + uwCenterOffset,
                            80 + y + uwCenterOffset,
@@ -266,14 +266,14 @@ void radialLinesGsLoop(void)
             UWORD uwThreeqX1 = (uwHalfX1 + uwX1) >> 1;
             UWORD uwThreeqY1 = (uwHalfY1 + uwY1) >> 1;
 
-            if (iChan3Played)
+            /*if (iChan3Played)
                 DrawlineOr((UBYTE *)((ULONG)s_pMainBufferRadialLines->pBack->Planes[0]),
                            80 + x + uwCenterOffset,
                            80 + y + uwCenterOffset,
                            x + uwX1,
                            y + uwY1);
 
-            else
+            else*/
                 DrawlineOr((UBYTE *)((ULONG)s_pMainBufferRadialLines->pBack->Planes[0]),
                            80 + x + uwCenterOffset,
                            80 + y + uwCenterOffset,
@@ -337,7 +337,7 @@ void radialLinesGsLoop(void)
 
     copSwapBuffers();
     static UWORD uwFrame = 0;
-    if (g_iChan4Played)
+    if (g_iChan2Played)
     {
         if (uwFrame == 0)
         {

@@ -10,6 +10,8 @@
 extern tStateManager *g_pGameStateManager;
 extern tState *g_pGameStates[];
 
+int g_iChan1Played;
+int g_iChan2Played;
 int g_iChan3Played;
 int g_iChan4Played;
 

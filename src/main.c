@@ -13,11 +13,12 @@
 #include "flashimage.h"
 
 #include "radiallineshiddenpart.h"
-#include "../include/chippy_wip_3.h"
+//#include "../include/chippy_wip_3.h"
 //#include "../include/findaway.h"
 //#include "../include/Dirty_Tricks.h"
 //#include "player610.6.no_cia.bin.h"
 //#include "testmod.p61.h"
+#include "../include/amazed_by_the_pokey.h"
 
 tStateManager *g_pGameStateManager = 0;
 tState *g_pGameStates[GAME_STATE_COUNT] = {0};
@@ -25,6 +26,8 @@ tState *g_pGameStates[GAME_STATE_COUNT] = {0};
 long mt_init(const unsigned char *);
 void mt_music();
 void mt_end();
+int chan1played();
+int chan2played();
 int chan3played();
 int chan4played();
 
@@ -64,6 +67,8 @@ static void INTERRUPT interruptHandlerMusic2()
     g_pCustom->intreq = (1 << INTB_VERTB);
     //p61Music();
     mt_music();
+    g_iChan1Played = chan1played();
+    g_iChan2Played = chan2played();
     g_iChan3Played = chan3played();
     g_iChan4Played = chan4played();
   }
@@ -89,8 +94,9 @@ void genericCreate(void)
 
   // Init music
   //mt_init(findaway_data);
-  mt_init(chippy_wip_3_data);
+  //mt_init(chippy_wip_3_data);
   //p61Init(testmod_data);
+  mt_init(amazed_by_the_pokey_data);
 
   // Here goes your startup code
   keyCreate(); // We'll use keyboard

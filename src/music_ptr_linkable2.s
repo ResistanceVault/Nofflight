@@ -11,8 +11,28 @@
 	XDEF _mt_init
 	XDEF _mt_music
 	XDEF _mt_end
+	XDEF _chan1played
+	XDEF _chan2played
 	XDEF _chan3played
 	XDEF _chan4played
+
+_chan1played:
+	tst.w   mt_chan2temp
+	beq.s   chan2played
+	moveq #1,d0
+	rts
+chan1played:
+	moveq #0,d0
+	rts
+
+_chan2played:
+	tst.w   mt_chan2temp
+	beq.s   chan2played
+	moveq #1,d0
+	rts
+chan2played:
+	moveq #0,d0
+	rts
 
 _chan3played:
 	tst.w   mt_chan3temp

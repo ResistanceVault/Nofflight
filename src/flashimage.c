@@ -105,7 +105,7 @@ void flashimageGsLoop(void)
   }
   viewUpdateCLUT(s_pView);
   vPortWaitForEnd(s_pVpMain);
-  if (ubLevel >= 16)
+  if (ubLevel > 16)
   {
     /*if (LoadRes(192000/4,"data/colors.bin")==NULL) gameExit();
     unLoadRes();
