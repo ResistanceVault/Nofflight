@@ -337,7 +337,10 @@ void radialLinesGsLoop(void)
 
     copSwapBuffers();
     static UWORD uwFrame = 0;
-    if (g_iChan2Played)
+    static WORD uwChange = 60;
+    uwChange--;
+    if (uwChange<0) uwChange = 60;
+    if (!uwChange)
     {
         if (uwFrame == 0)
         {

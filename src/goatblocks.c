@@ -134,7 +134,7 @@ static char *g_pTxt[] = {
     " (third at flashparty 2020)",
     "- Kain for his ACE framework",
     "- mAZE for his incredible chipmusic",
-    "- AstroFra for his graphic assets",
+    "- Fra for his graphic assets",
     "- The Piston demogroup ",
     " for answering all my technical",
     " questions (SnC,4Play)",
