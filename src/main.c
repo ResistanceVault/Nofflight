@@ -18,7 +18,7 @@
 //#include "../include/Dirty_Tricks.h"
 //#include "player610.6.no_cia.bin.h"
 //#include "testmod.p61.h"
-#include "../include/amazed_by_the_pokey.h"
+//#include "../include/amazed_by_the_pokey.h"
 
 tStateManager *g_pGameStateManager = 0;
 tState *g_pGameStates[GAME_STATE_COUNT] = {0};
@@ -90,13 +90,18 @@ void genericCreate(void)
   //LoadRes(51200,"data/resistance_final.raw");
   //LoadRes(26880, "data/VampireItalialogo.raw");
 
+  LoadRes(62592, "data/amazed_by_pokey-fartfixed.mod");
+  g_pMusic = memAlloc(62592, MEMF_CHIP);
+  memcpy(g_pMusic,g_pBuffer,62592);
+  unLoadRes();
+
   LoadRes(35840, "data/piston_logo.raw");
 
   // Init music
   //mt_init(findaway_data);
   //mt_init(chippy_wip_3_data);
   //p61Init(testmod_data);
-  mt_init(amazed_by_the_pokey_data);
+  mt_init(g_pMusic);
 
   // Here goes your startup code
   keyCreate(); // We'll use keyboard

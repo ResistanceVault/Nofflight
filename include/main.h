@@ -16,6 +16,7 @@ int g_iChan3Played;
 int g_iChan4Played;
 
 UBYTE* g_pBuffer ;
+UBYTE* g_pMusic ;
 ULONG g_ulBufferLength ;
 UBYTE* LoadRes(ULONG ,char* );
 void unLoadRes();

@@ -408,6 +408,8 @@ all resistance_final.raw resistance_final.plt: ${IMGDIR}resistance_final.iff
 	cp piston_logo.raw ../../adf/data
 	cp piston_logo.plt ../../adf/data
 
+	cp amazed_by_pokey-fartfixed.mod ../../adf/data
+
 clean: 
 	echo "cancello"
 
