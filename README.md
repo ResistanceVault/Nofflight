@@ -1,3 +1,4 @@
 # Ozzyboshi's demo for flashparty 2021
-To be released under the Piston label
+![votesystem.png](votesystem.png)
+
 Code (c) of Ozzyboshi.
